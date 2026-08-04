@@ -205,6 +205,7 @@
     .section-title {
       font-size: 0.8rem;
       color: var(--accent-cyan);
+      margin-top: 20px;
       margin-bottom: 10px;
       text-transform: uppercase;
     }
@@ -214,6 +215,7 @@
       border: 1px solid var(--border);
       border-radius: 4px;
       overflow: hidden;
+      margin-bottom: 20px;
     }
 
     table { width: 100%; border-collapse: collapse; }
@@ -238,6 +240,19 @@
       padding: 2px 6px;
       border-radius: 2px;
       font-size: 0.65rem;
+    }
+
+    .contents-scroll {
+      max-height: 250px;
+      overflow-y: auto;
+      background: #050508;
+      padding: 10px;
+    }
+    .content-item {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
     }
   </style>
 </head>
@@ -303,6 +318,14 @@
         <tr><td colspan="5" style="color: var(--text-muted);">A carregar dados...</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- NOVA SECÇÃO: CONTEÚDOS GERADOS -->
+  <div class="section-title">📝 HISTÓRICO DE CONTEÚDOS GERADOS PELAS IAS</div>
+  <div class="table-container">
+    <div class="contents-scroll" id="contents-list">
+      <div style="color: var(--text-muted); padding: 10px;">A carregar conteúdos...</div>
+    </div>
   </div>
 
   <script>
@@ -470,6 +493,21 @@
             </tr>
           `;
         });
+
+        // Atualizar lista de conteúdos gerados
+        const contentsContainer = document.getElementById('contents-list');
+        if (data.contents && data.contents.length > 0) {
+          contentsContainer.innerHTML = '';
+          data.contents.forEach(item => {
+            contentsContainer.innerHTML += `
+              <div class="content-item">
+                <b>[${item.hora || 'Recente'}] ${item.agente || 'IA'}:</b> ${item.conteudo || item.texto || JSON.stringify(item)}
+              </div>
+            `;
+          });
+        } else {
+          contentsContainer.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Nenhum conteúdo gerado registado.</div>';
+        }
 
         const testLogsContainer = document.getElementById('test-logs-list');
         if (data.test_logs && data.test_logs.length > 0) {
