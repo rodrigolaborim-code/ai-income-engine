@@ -64,15 +64,19 @@ def run_autonomous_agents():
         elif agente_choice == "Content":
             hook = random.choice(hooks)
             DB["metrics"]["conteudos"] += 1
+            
+            # Conteúdo rico e completo gerado pela IA para conseguires ler no painel
+            texto_gerado = f"Hook: {hook}\n\n[Copy Estruturado]: Descobre como estruturar os teus processos de automação passo a passo. Elimina tarefas repetitivas e escala a tua operação digital de forma consistente e sem atritos."
+            
             content_item = {
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "Content Agent",
-                "conteudo": f"Novo rascunho gerado: '{hook}'",
+                "conteudo": texto_gerado,
                 "created_at": datetime.now().isoformat()
             }
             DB["content_db"].insert(0, content_item)
             DB["content_db"] = DB["content_db"][:30] # Guarda os últimos 30
-            log_event("Content Agent", "Geração de Copy", f"Novo rascunho gerado: '{hook}'")
+            log_event("Content Agent", "Geração de Copy", f"Copy gerado: '{hook}'")
         elif agente_choice == "Funnel":
             log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
         elif agente_choice == "Analytics":
@@ -91,7 +95,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/data':
-            # Criamos uma cópia do DB para injetar a chave 'contents' compatível com o dashboard
             response_data = DB.copy()
             response_data["contents"] = DB["content_db"]
             self._send_json(response_data)
