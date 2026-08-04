@@ -85,6 +85,11 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/api/data':
             self._send_json(DB)
+        elif self.path == '/api/reset-tests':
+            # Suporta também GET caso o cliente dispare por GET
+            DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
+            DB["test_logs"] = []
+            self._send_json({"ok": True, "message": "Testes limpos com sucesso via GET!"})
         else:
             super().do_GET()
 
@@ -131,7 +136,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
-            self._send_json({"ok": True, "message": "Testes limpos com sucesso!"})
+            self._send_json({"ok": True, "message": "Testes limpos com sucesso via POST!"})
 
         else:
             self._send_json({"ok": False, "reason": "Endpoint nao encontrado"}, status=404)
