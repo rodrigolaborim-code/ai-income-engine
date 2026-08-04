@@ -85,7 +85,6 @@
       color: var(--text-white);
     }
 
-    /* MAIN GRID: JOGO + PAINEL DE TESTES */
     .main-workspace {
       display: grid;
       grid-template-columns: 620px 1fr;
@@ -104,7 +103,6 @@
 
     #phaser-game { width: 100%; height: 100%; }
 
-    /* SANDBOX SIDEBAR */
     .sidebar-sandbox {
       background: #090b14;
       border: 2px dashed var(--accent-yellow);
@@ -258,12 +256,10 @@
   </div>
 
   <div class="main-workspace">
-    <!-- JOGO / SALAS -->
     <div class="game-wrapper">
       <div id="phaser-game"></div>
     </div>
 
-    <!-- PAINEL DE TESTES LATERAL -->
     <div class="sidebar-sandbox">
       <div class="sandbox-title">🧪 TESTES & SIMULAÇÕES (SANDBOX)</div>
 
@@ -485,6 +481,8 @@
               </div>
             `;
           });
+        } else {
+          testLogsContainer.innerHTML = '<div style="color: var(--text-muted);">Sem simulações executadas.</div>';
         }
       } catch (err) {
         console.error('Erro ao atualizar dashboard', err);
@@ -526,9 +524,14 @@
     });
 
     document.getElementById('btn-reset').addEventListener('click', async () => {
-      await fetch('/api/reset-tests');
-      logConsole('Testes limpos!');
-      atualizarDashboard();
+      logConsole('A limpar testes...');
+      try {
+        await fetch('/api/reset-tests', { method: 'POST' });
+        logConsole('Testes limpos!');
+        atualizarDashboard();
+      } catch (e) {
+        logConsole('ERRO: Não foi possível limpar os testes.');
+      }
     });
 
     atualizarDashboard();
