@@ -47,12 +47,12 @@ def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
         DB["logs"] = DB["logs"][:20]
 
 def run_autonomous_agents():
-    hooks = [
-        "Estás a usar IA como chatbot? Faz isto.",
-        "A diferença entre um prompt e um workflow.",
-        "3 tarefas que eu automatizaria primeiro.",
-        "O erro nº1 em automações com IA.",
-        "Como transformar feedback em produto."
+    # Tipos de produtos/conteúdos variados
+    tipos_conteudo = [
+        {"tipo": "E-Book / Livro", "titulo": "Manual Prático de Automação com IA (PDF)", "detalhe": "Livro digital de 45 páginas gerado com estratégias de workflows."},
+        {"tipo": "Vídeo / VSL", "titulo": "Vídeo de Vendas: Como Escalar com Agentes IA", "detalhe": "Roteiro e animação renderizada para anúncios de alta conversão."},
+        {"tipo": "Imagem / Criativo", "titulo": "Pack de Criativos para Anúncios (Ads)", "detalhe": "Banner cyberpunk gerado por IA para campanhas de tráfego pago."},
+        {"tipo": "Copy / E-mail", "titulo": "Sequência de E-mails de Boas-Vindas", "detalhe": "5 e-mails automatizados para conversão de leads frios em clientes."}
     ]
 
     while True:
@@ -62,21 +62,20 @@ def run_autonomous_agents():
         if agente_choice == "Research":
             log_event("Research Agent", "Análise de Mercado", "Nova oportunidade mapeada: Templates de IA para PMEs")
         elif agente_choice == "Content":
-            hook = random.choice(hooks)
+            item_escolhido = random.choice(tipos_conteudo)
             DB["metrics"]["conteudos"] += 1
-            
-            # Conteúdo rico e completo gerado pela IA para conseguires ler no painel
-            texto_gerado = f"Hook: {hook}\n\n[Copy Estruturado]: Descobre como estruturar os teus processos de automação passo a passo. Elimina tarefas repetitivas e escala a tua operação digital de forma consistente e sem atritos."
             
             content_item = {
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "Content Agent",
-                "conteudo": texto_gerado,
+                "tipo": item_escolhido["tipo"],
+                "titulo": item_escolhido["titulo"],
+                "conteudo": item_escolhido["detalhe"],
                 "created_at": datetime.now().isoformat()
             }
             DB["content_db"].insert(0, content_item)
             DB["content_db"] = DB["content_db"][:30] # Guarda os últimos 30
-            log_event("Content Agent", "Geração de Copy", f"Copy gerado: '{hook}'")
+            log_event("Content Agent", f"Criação de {item_escolhido['tipo']}", f"Gerado: {item_escolhido['titulo']}")
         elif agente_choice == "Funnel":
             log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
         elif agente_choice == "Analytics":
