@@ -64,7 +64,14 @@ def run_autonomous_agents():
         elif agente_choice == "Content":
             hook = random.choice(hooks)
             DB["metrics"]["conteudos"] += 1
-            DB["content_db"].append({"hook": hook, "status": "draft", "created_at": datetime.now().isoformat()})
+            content_item = {
+                "hora": datetime.now().strftime("%H:%M:%S"),
+                "agente": "Content Agent",
+                "conteudo": f"Novo rascunho gerado: '{hook}'",
+                "created_at": datetime.now().isoformat()
+            }
+            DB["content_db"].insert(0, content_item)
+            DB["content_db"] = DB["content_db"][:30] # Guarda os últimos 30
             log_event("Content Agent", "Geração de Copy", f"Novo rascunho gerado: '{hook}'")
         elif agente_choice == "Funnel":
             log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
@@ -84,7 +91,10 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/data':
-            self._send_json(DB)
+            # Criamos uma cópia do DB para injetar a chave 'contents' compatível com o dashboard
+            response_data = DB.copy()
+            response_data["contents"] = DB["content_db"]
+            self._send_json(response_data)
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
@@ -103,15 +113,13 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
         is_test = payload.get('is_test', True)
 
-        # WEBHOOK OFICIAL DO STRIPE
         if self.path == '/webhook/stripe':
             event_type = payload.get('type')
             
-            # Quando uma sessão de checkout é concluída com sucesso
             if event_type == 'checkout.session.completed':
                 session = payload.get('data', {}).get('object', {})
                 email = session.get('customer_email') or session.get('customer_details', {}).get('email', 'cliente@stripe.com')
-                amount_total = session.get('amount_total', 2900) / 100.0 # Stripe envia em cêntimos (ex: 2900 = €29.00)
+                amount_total = session.get('amount_total', 2900) / 100.0
                 
                 DB["metrics"]["vendas"] += 1
                 DB["metrics"]["receita"] += amount_total
@@ -169,7 +177,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
 
-socketserver.TCPServer.allow_reuse_address =True
+socketserver.TCPServer.allow_reuse_address = True
 
 with socketserver.TCPServer(("0.0.0.0", PORT), EngineHandler) as httpd:
     httpd.serve_forever()
