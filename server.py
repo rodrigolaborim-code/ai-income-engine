@@ -8,26 +8,43 @@ import random
 from datetime import datetime
 
 PORT = int(os.environ.get("PORT", 8000))
+DB_FILE = "banco de dados.json"
 
-DB = {
-    "metrics": {
-        "leads": 0,
-        "vendas": 0,
-        "receita": 0.0,
-        "conteudos": 0
-    },
-    "test_metrics": {
-        "leads": 0,
-        "vendas": 0,
-        "receita": 0.0
-    },
-    "leads_db": [],
-    "orders_db": [],
-    "content_db": [],
-    "feedback_db": [],
-    "logs": [],
-    "test_logs": []
-}
+def carregar_db():
+    if os.path.exists(DB_FILE):
+        try:
+            with open(DB_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "metrics": {
+            "leads": 0,
+            "vendas": 0,
+            "receita": 0.0,
+            "conteudos": 0
+        },
+        "test_metrics": {
+            "leads": 0,
+            "vendas": 0,
+            "receita": 0.0
+        },
+        "leads_db": [],
+        "orders_db": [],
+        "content_db": [],
+        "feedback_db": [],
+        "logs": [],
+        "test_logs": []
+    }
+
+def guardar_db():
+    try:
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(DB, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("Erro ao guardar BD:", e)
+
+DB = carregar_db()
 
 def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
     log_entry = {
@@ -45,9 +62,10 @@ def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
     else:
         DB["logs"].insert(0, log_entry)
         DB["logs"] = DB["logs"][:20]
+    
+    guardar_db()
 
 def run_autonomous_agents():
-    # Tipos de produtos/conteúdos variados
     tipos_conteudo = [
         {"tipo": "E-Book / Livro", "titulo": "Manual Prático de Automação com IA (PDF)", "detalhe": "Livro digital de 45 páginas gerado com estratégias de workflows."},
         {"tipo": "Vídeo / VSL", "titulo": "Vídeo de Vendas: Como Escalar com Agentes IA", "detalhe": "Roteiro e animação renderizada para anúncios de alta conversão."},
@@ -74,7 +92,8 @@ def run_autonomous_agents():
                 "created_at": datetime.now().isoformat()
             }
             DB["content_db"].insert(0, content_item)
-            DB["content_db"] = DB["content_db"][:30] # Guarda os últimos 30
+            DB["content_db"] = DB["content_db"][:30]
+            guardar_db()
             log_event("Content Agent", f"Criação de {item_escolhido['tipo']}", f"Gerado: {item_escolhido['titulo']}")
         elif agente_choice == "Funnel":
             log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
@@ -100,6 +119,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
+            guardar_db()
             self._send_json({"ok": True, "message": "Testes limpos com sucesso via GET!"})
         else:
             super().do_GET()
@@ -126,6 +146,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 DB["metrics"]["vendas"] += 1
                 DB["metrics"]["receita"] += amount_total
                 DB["orders_db"].append({"email": email, "amount": amount_total, "timestamp": datetime.now().isoformat()})
+                guardar_db()
                 
                 log_event("Sales Agent", "Pagamento Stripe", f"COMPRA REAL: +€{amount_total:.2f} ({email})", is_test=False)
                 
@@ -138,10 +159,12 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
             if is_test:
                 DB["test_metrics"]["leads"] += 1
+                guardar_db()
                 log_event("Funnel Agent", "Simulação Lead", f"TESTE: Lead registado ({email})", is_test=True)
             else:
                 DB["metrics"]["leads"] += 1
                 DB["leads_db"].append({"email": email, "created_at": datetime.now().isoformat()})
+                guardar_db()
                 log_event("Funnel Agent", "Captura de Lead", f"Novo Lead Registado: {email}", is_test=False)
 
             self._send_json({"ok": True, "message": f"Lead {'[TESTE]' if is_test else '[REAL]'} guardada com sucesso!"})
@@ -153,11 +176,13 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             if is_test:
                 DB["test_metrics"]["vendas"] += 1
                 DB["test_metrics"]["receita"] += amount
+                guardar_db()
                 log_event("Sales Agent", "Simulação Venda", f"TESTE: +€{amount:.2f} ({email})", is_test=True)
             else:
                 DB["metrics"]["vendas"] += 1
                 DB["metrics"]["receita"] += amount
                 DB["orders_db"].append({"email": email, "amount": amount, "timestamp": datetime.now().isoformat()})
+                guardar_db()
                 log_event("Sales Agent", "Processar Pagamento", f"COMPRA REAL: +€{amount:.2f} ({email})", is_test=False)
 
             self._send_json({"ok": True, "message": f"Venda {'[TESTE]' if is_test else '[REAL]'} de €{amount:.2f} processada!"})
@@ -165,6 +190,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
+            guardar_db()
             self._send_json({"ok": True, "message": "Testes limpos com sucesso via POST!"})
 
         else:
