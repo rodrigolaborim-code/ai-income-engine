@@ -321,7 +321,7 @@
   </div>
 
   <!-- NOVA SECÇÃO: CONTEÚDOS GERADOS -->
-  <div class="section-title">📝 HISTÓRICO DE CONTEÚDOS GERADOS PELAS IAS</div>
+  <div class="section-title">📝 HISTÓRICO DE ATIVOS GERADOS PELAS IAS (LIVROS, VÍDEOS, ETC.)</div>
   <div class="table-container">
     <div class="contents-scroll" id="contents-list">
       <div style="color: var(--text-muted); padding: 10px;">A carregar conteúdos...</div>
@@ -494,14 +494,20 @@
           `;
         });
 
-        // Atualizar lista de conteúdos gerados
+        // Atualizar lista de conteúdos gerados com suporte a tipos e títulos
         const contentsContainer = document.getElementById('contents-list');
         if (data.contents && data.contents.length > 0) {
           contentsContainer.innerHTML = '';
           data.contents.forEach(item => {
+            const tipoAtivo = item.tipo || 'Ativo IA';
+            const tituloAtivo = item.titulo || item.conteudo || 'Sem Título';
+            const detalheAtivo = item.conteudo && item.titulo ? item.conteudo : (item.detalhe || '');
+
             contentsContainer.innerHTML += `
-              <div class="content-item">
-                <b>[${item.hora || 'Recente'}] ${item.agente || 'IA'}:</b> ${item.conteudo || item.texto || JSON.stringify(item)}
+              <div class="content-item" style="border-left: 3px solid var(--accent-cyan); padding: 8px; margin-bottom: 8px; background: rgba(0,240,255,0.03);">
+                <div style="font-size: 0.65rem; color: var(--accent-yellow);">[${item.hora || 'Recente'}] <b>${tipoAtivo}</b></div>
+                <div style="font-weight: bold; color: #fff; font-size: 0.8rem; margin-top: 2px;">${tituloAtivo}</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 2px;">${detalheAtivo}</div>
               </div>
             `;
           });
