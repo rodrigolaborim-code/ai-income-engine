@@ -86,7 +86,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/data':
             self._send_json(DB)
         elif self.path == '/api/reset-tests':
-            # Suporta também GET caso o cliente dispare por GET
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
             self._send_json({"ok": True, "message": "Testes limpos com sucesso via GET!"})
@@ -104,7 +103,27 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
         is_test = payload.get('is_test', True)
 
-        if self.path in ['/lead', '/api/lead']:
+        # WEBHOOK OFICIAL DO STRIPE
+        if self.path == '/webhook/stripe':
+            event_type = payload.get('type')
+            
+            # Quando uma sessão de checkout é concluída com sucesso
+            if event_type == 'checkout.session.completed':
+                session = payload.get('data', {}).get('object', {})
+                email = session.get('customer_email') or session.get('customer_details', {}).get('email', 'cliente@stripe.com')
+                amount_total = session.get('amount_total', 2900) / 100.0 # Stripe envia em cêntimos (ex: 2900 = €29.00)
+                
+                DB["metrics"]["vendas"] += 1
+                DB["metrics"]["receita"] += amount_total
+                DB["orders_db"].append({"email": email, "amount": amount_total, "timestamp": datetime.now().isoformat()})
+                
+                log_event("Sales Agent", "Pagamento Stripe", f"COMPRA REAL: +€{amount_total:.2f} ({email})", is_test=False)
+                
+                self._send_json({"received": True})
+            else:
+                self._send_json({"received": True, "note": "Evento ignorado"})
+
+        elif self.path in ['/lead', '/api/lead']:
             email = payload.get('email', 'teste@lead.com').strip().lower()
 
             if is_test:
@@ -150,7 +169,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
 
-socketserver.TCPServer.allow_reuse_address = True
+socketserver.TCPServer.allow_reuse_address =True
 
 with socketserver.TCPServer(("0.0.0.0", PORT), EngineHandler) as httpd:
     httpd.serve_forever()
