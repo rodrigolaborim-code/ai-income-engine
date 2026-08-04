@@ -148,7 +148,7 @@
 
     .task-tag { color: var(--accent-yellow); font-weight: 600; }
 
-    /* MENU SEPARADO DE TESTES */
+    /* MENU ISOLADO DE TESTES */
     .sandbox-container {
       background: #090b14;
       border: 2px dashed var(--accent-yellow);
@@ -186,7 +186,7 @@
       padding: 10px 14px;
       border-radius: 4px;
       font-family: inherit;
-      min-width: 240px;
+      min-width: 260px;
     }
 
     .sandbox-controls button {
@@ -198,10 +198,7 @@
       border-radius: 4px;
       cursor: pointer;
       font-family: inherit;
-      transition: opacity 0.2s;
     }
-
-    .sandbox-controls button:hover { opacity: 0.9; }
 
     .sandbox-controls button.reset {
       background: transparent;
@@ -277,17 +274,17 @@
     </div>
 
     <div class="sandbox-controls">
-      <input type="email" id="test-email" placeholder="teste@exemplo.com">
-      <button onclick="executarTesteLead()">+ Testar Lead</button>
-      <button onclick="executarTesteVenda()">+ Testar Venda (€29)</button>
-      <button class="reset" onclick="resetarTestes()">Limpar Testes</button>
+      <input type="email" id="test-email" value="rodrigolaborim@gmail.com" placeholder="email@teste.com">
+      <button type="button" id="btn-lead">+ Testar Lead</button>
+      <button type="button" id="btn-venda">+ Testar Venda (€29)</button>
+      <button type="button" id="btn-reset" class="reset">Limpar Testes</button>
     </div>
 
     <div class="console-output" id="console">
-      > Consola de Testes Pronta. Clica num dos botões acima para executar uma simulação.
+      > Consola Pronta. Clica num botão acima para simular um pedido.
     </div>
 
-    <div class="section-title" style="margin-top: 16px; font-size: 0.75rem;">📋 LOGS DE SIMULAÇÃO</div>
+    <div class="section-title" style="margin-top: 16px; font-size: 0.75rem;">📋 LOGS DE SIMULATION</div>
     <div class="table-container" style="margin-bottom: 0;">
       <table>
         <thead>
@@ -462,41 +459,40 @@
       });
     }
 
+    function logConsole(msg) {
+      document.getElementById('console').innerText = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+    }
+
     async function atualizarDashboard() {
       try {
         const res = await fetch('/api/data');
         const data = await res.json();
 
-        // Métricas Reais
         document.getElementById('leads').innerText = data.metrics.leads;
         document.getElementById('vendas').innerText = data.metrics.vendas;
         document.getElementById('receita').innerText = '€' + data.metrics.receita.toFixed(2);
         document.getElementById('conteudos').innerText = data.metrics.conteudos;
 
-        // Métricas Teste
         if (data.test_metrics) {
           document.getElementById('t-leads').innerText = data.test_metrics.leads;
           document.getElementById('t-vendas').innerText = data.test_metrics.vendas;
           document.getElementById('t-receita').innerText = '€' + data.test_metrics.receita.toFixed(2);
         }
 
-        // Tabela Logs Reais
         const tbody = document.getElementById('logs-body');
         tbody.innerHTML = '';
         data.logs.forEach(log => {
-          const tarefaNome = log.tarefa || log.evento;
           tbody.innerHTML += `
             <tr>
               <td>${log.hora}</td>
               <td><b>${log.agente}</b></td>
-              <td><span class="task-tag">${tarefaNome}</span></td>
+              <td><span class="task-tag">${log.tarefa || log.evento}</span></td>
               <td>${log.evento}</td>
               <td><span class="status">${log.status}</span></td>
             </tr>
           `;
         });
 
-        // Tabela Logs Teste
         const tBodyTest = document.getElementById('test-logs-body');
         if (data.test_logs && data.test_logs.length > 0) {
           tBodyTest.innerHTML = '';
@@ -512,53 +508,49 @@
           });
         }
       } catch (err) {
-        console.error('Erro ao atualizar dashboard', err);
+        console.error('Erro ao recarregar dados:', err);
       }
     }
 
-    function logConsole(msg) {
-      document.getElementById('console').innerText = `> [${new Date().toLocaleTimeString()}] ${msg}`;
-    }
-
-    async function executarTesteLead() {
-      const email = document.getElementById('test-email').value.trim() || 'teste@lead.com';
-      logConsole(`A enviar pedido de teste para /lead (${email})...`);
+    document.getElementById('btn-lead').addEventListener('click', async () => {
+      const email = document.getElementById('test-email').value || 'teste@lead.com';
+      logConsole(`A enviar pedido de teste...`);
       try {
         const res = await fetch('/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: email, consent: true, is_test: true })
         });
-        const json = await res.json();
-        logConsole(json.message || 'Teste concluído!');
+        const data = await res.json();
+        logConsole(data.message || 'Lead Registada!');
         atualizarDashboard();
       } catch (e) {
-        logConsole(`ERRO: Não foi possível comunicar com o servidor.`);
+        logConsole('ERRO: Falha ao ligar ao servidor.');
       }
-    }
+    });
 
-    async function executarTesteVenda() {
-      const email = document.getElementById('test-email').value.trim() || 'comprador@teste.com';
-      logConsole(`A enviar pedido de teste para /purchase (€29)...`);
+    document.getElementById('btn-venda').addEventListener('click', async () => {
+      const email = document.getElementById('test-email').value || 'teste@venda.com';
+      logConsole(`A enviar venda de €29...`);
       try {
         const res = await fetch('/purchase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ event: 'purchase', email: email, amount: 29.0, is_test: true })
         });
-        const json = await res.json();
-        logConsole(json.message || 'Venda de teste registada!');
+        const data = await res.json();
+        logConsole(data.message || 'Venda Registada!');
         atualizarDashboard();
       } catch (e) {
-        logConsole(`ERRO: Não foi possível comunicar com o servidor.`);
+        logConsole('ERRO: Falha ao ligar ao servidor.');
       }
-    }
+    });
 
-    async function resetarTestes() {
+    document.getElementById('btn-reset').addEventListener('click', async () => {
       await fetch('/api/reset-tests');
       logConsole('Métricas de teste limpas!');
       atualizarDashboard();
-    }
+    });
 
     atualizarDashboard();
     setInterval(atualizarDashboard, 2500);
