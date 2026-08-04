@@ -200,10 +200,16 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
 load_db()
 
-print(f"\n⚡ AI INCOME ENGINE V2 (AUTÓNOMO & LOCAL) ATIVO!")
-print(f"🖥️ Cyber HQ Dashboard: http://localhost:{PORT}")
-print(f"📥 Endpoint Lead: http://localhost:{PORT}/lead")
-print(f"💳 Endpoint Purchase: http://localhost:{PORT}/purchase\n")
+# Obter a porta do ambiente do Render (ou usar 8000 se executado localmente)
+PORT = int(os.environ.get("PORT", 8000))
 
-with socketserver.TCPServer(("", PORT), EngineHandler) as httpd:
+print(f"\n⚡ AI INCOME ENGINE V2 (AUTÓNOMO & LOCAL) ATIVO!")
+print(f"🖥️ Cyber HQ Dashboard ativo na porta {PORT}")
+print(f"📥 Endpoint Lead: /lead")
+print(f"💳 Endpoint Purchase: /purchase\n")
+
+# Permitir reuso do endereço para evitar conflitos de socket no deploy
+socketserver.TCPServer.allow_reuse_address = True
+
+with socketserver.TCPServer(("0.0.0.0", PORT), EngineHandler) as httpd:
     httpd.serve_forever()
