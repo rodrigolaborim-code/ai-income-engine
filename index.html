@@ -108,6 +108,7 @@
       border: 1px solid var(--border);
       border-radius: 4px;
       overflow: hidden;
+      margin-bottom: 24px;
     }
 
     table { width: 100%; border-collapse: collapse; }
@@ -143,6 +144,42 @@
       color: var(--accent-yellow);
       font-weight: 600;
     }
+
+    .test-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-green);
+      padding: 16px;
+      border-radius: 4px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .test-panel input {
+      background: #050508;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .test-panel button {
+      background: var(--accent-green);
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .test-panel button.buy {
+      background: var(--accent-yellow);
+    }
   </style>
 </head>
 <body>
@@ -175,9 +212,16 @@
         </tr>
       </thead>
       <tbody id="logs-body">
-        <tr><td colspan="5" style="color: var(--text-muted);">A LIGAR AO SERVIDOR LOCAL...</td></tr>
+        <tr><td colspan="5" style="color: var(--text-muted);">A LIGAR AO SERVIDOR...</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="test-panel">
+    <span style="font-size: 0.8rem; font-weight: bold; color: var(--accent-cyan);">TESTAR ENDPOINTS:</span>
+    <input type="email" id="test-email" placeholder="cliente@exemplo.com">
+    <button onclick="simularLead()">+ Simular Lead</button>
+    <button class="buy" onclick="simularVenda()">+ Simular Venda (€29)</button>
   </div>
 
   <script>
@@ -349,7 +393,7 @@
 
         document.getElementById('leads').innerText = data.metrics.leads;
         document.getElementById('vendas').innerText = data.metrics.vendas;
-        document.getElementById('receita').innerText = '€' + data.metrics.receita;
+        document.getElementById('receita').innerText = '€' + data.metrics.receita.toFixed(2);
         document.getElementById('conteudos').innerText = data.metrics.conteudos;
 
         const tbody = document.getElementById('logs-body');
@@ -374,8 +418,28 @@
           `;
         });
       } catch (err) {
-        console.error('Erro ao carregar dados do servidor Python', err);
+        console.error('Erro ao carregar dados do servidor', err);
       }
+    }
+
+    async function simularLead() {
+      const email = document.getElementById('test-email').value || 'teste@lead.com';
+      await fetch('/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, consent: true })
+      });
+      atualizarDashboard();
+    }
+
+    async function simularVenda() {
+      const email = document.getElementById('test-email').value || 'comprador@venda.com';
+      await fetch('/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'purchase', email: email, amount: 29.0 })
+      });
+      atualizarDashboard();
     }
 
     atualizarDashboard();
