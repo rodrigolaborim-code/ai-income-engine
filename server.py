@@ -1,4 +1,4 @@
-﻿import http.server
+import http.server
 import socketserver
 import json
 import os
@@ -7,7 +7,7 @@ import threading
 import random
 from datetime import datetime
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8000))
 DB_FILE = "database.json"
 
 # Base de dados estruturada localmente (Sem n8n / Make)
@@ -200,15 +200,11 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
 load_db()
 
-# Obter a porta do ambiente do Render (ou usar 8000 se executado localmente)
-PORT = int(os.environ.get("PORT", 8000))
-
 print(f"\n⚡ AI INCOME ENGINE V2 (AUTÓNOMO & LOCAL) ATIVO!")
 print(f"🖥️ Cyber HQ Dashboard ativo na porta {PORT}")
 print(f"📥 Endpoint Lead: /lead")
 print(f"💳 Endpoint Purchase: /purchase\n")
 
-# Permitir reuso do endereço para evitar conflitos de socket no deploy
 socketserver.TCPServer.allow_reuse_address = True
 
 with socketserver.TCPServer(("0.0.0.0", PORT), EngineHandler) as httpd:
