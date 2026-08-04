@@ -16,6 +16,7 @@
       --accent-green: #00ff66;
       --accent-cyan: #00f0ff;
       --accent-yellow: #ffaa00;
+      --accent-magenta: #ff0077;
       --text-white: #ffffff;
       --text-muted: #565f89;
     }
@@ -98,9 +99,14 @@
       overflow: hidden;
     }
 
-    #phaser-game {
-      width: 100%;
-      height: 100%;
+    #phaser-game { width: 100%; height: 100%; }
+
+    .section-title {
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .table-container {
@@ -140,45 +146,88 @@
       font-weight: 700;
     }
 
-    .task-tag {
-      color: var(--accent-yellow);
-      font-weight: 600;
+    .task-tag { color: var(--accent-yellow); font-weight: 600; }
+
+    /* MENU SEPARADO DE TESTES */
+    .sandbox-container {
+      background: #090b14;
+      border: 2px dashed var(--accent-yellow);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
     }
 
-    .test-panel {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent-green);
-      padding: 16px;
-      border-radius: 4px;
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .sandbox-header h2 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+    }
+
+    .sandbox-controls {
       display: flex;
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
+      margin-bottom: 16px;
     }
 
-    .test-panel input {
+    .sandbox-controls input {
       background: #050508;
       border: 1px solid var(--border);
       color: #fff;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: 4px;
       font-family: inherit;
+      min-width: 240px;
     }
 
-    .test-panel button {
-      background: var(--accent-green);
+    .sandbox-controls button {
+      background: var(--accent-yellow);
       color: #000;
       border: none;
-      padding: 8px 16px;
-      font-weight: 700;
+      padding: 10px 18px;
+      font-weight: 800;
       border-radius: 4px;
       cursor: pointer;
       font-family: inherit;
+      transition: opacity 0.2s;
     }
 
-    .test-panel button.buy {
-      background: var(--accent-yellow);
+    .sandbox-controls button:hover { opacity: 0.9; }
+
+    .sandbox-controls button.reset {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .console-output {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px;
+      font-size: 0.75rem;
+      color: var(--accent-green);
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .test-badge {
+      color: var(--accent-yellow);
+      background: rgba(255, 170, 0, 0.1);
+      border: 1px solid rgba(255, 170, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-size: 0.65rem;
     }
   </style>
 </head>
@@ -186,13 +235,13 @@
 
   <div class="header-container">
     <h1>CYBER_OFFICE // LIVE_TASK_MONITOR</h1>
-    <div class="system-status">● 6 AGENTS EXECUTING TASKS</div>
+    <div class="system-status">● AMBIENTE REAL DE OPERAÇÃO</div>
   </div>
 
   <div class="grid">
-    <div class="card"><h3>Leads Capturados</h3><div class="val" id="leads">-</div></div>
-    <div class="card"><h3>Vendas</h3><div class="val" id="vendas">-</div></div>
-    <div class="card"><h3>Receita Total</h3><div class="val" id="receita">-</div></div>
+    <div class="card"><h3>Leads Reais</h3><div class="val" id="leads">-</div></div>
+    <div class="card"><h3>Vendas Reais</h3><div class="val" id="vendas">-</div></div>
+    <div class="card"><h3>Receita Real</h3><div class="val" id="receita">-</div></div>
     <div class="card"><h3>Conteúdos Gerados</h3><div class="val" id="conteudos">-</div></div>
   </div>
 
@@ -200,6 +249,7 @@
     <div id="phaser-game"></div>
   </div>
 
+  <div class="section-title">📊 REGISTOS OPERACIONAIS REAIS</div>
   <div class="table-container">
     <table>
       <thead>
@@ -217,11 +267,42 @@
     </table>
   </div>
 
-  <div class="test-panel">
-    <span style="font-size: 0.8rem; font-weight: bold; color: var(--accent-cyan);">TESTAR ENDPOINTS:</span>
-    <input type="email" id="test-email" placeholder="cliente@exemplo.com">
-    <button onclick="simularLead()">+ Simular Lead</button>
-    <button class="buy" onclick="simularVenda()">+ Simular Venda (€29)</button>
+  <!-- MENU DE TESTES ISOLADO -->
+  <div class="sandbox-container">
+    <div class="sandbox-header">
+      <h2>🧪 MENU DE TESTES & SIMULAÇÕES (SANDBOX)</h2>
+      <div style="font-size: 0.75rem; color: #a9b1d6;">
+        Leads Teste: <b id="t-leads">0</b> | Vendas Teste: <b id="t-vendas">0</b> | Receita Teste: <b id="t-receita">€0.00</b>
+      </div>
+    </div>
+
+    <div class="sandbox-controls">
+      <input type="email" id="test-email" placeholder="teste@exemplo.com">
+      <button onclick="executarTesteLead()">+ Testar Lead</button>
+      <button onclick="executarTesteVenda()">+ Testar Venda (€29)</button>
+      <button class="reset" onclick="resetarTestes()">Limpar Testes</button>
+    </div>
+
+    <div class="console-output" id="console">
+      > Consola de Testes Pronta. Clica num dos botões acima para executar uma simulação.
+    </div>
+
+    <div class="section-title" style="margin-top: 16px; font-size: 0.75rem;">📋 LOGS DE SIMULAÇÃO</div>
+    <div class="table-container" style="margin-bottom: 0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Agente</th>
+            <th>Ação de Teste</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody id="test-logs-body">
+          <tr><td colspan="4" style="color: var(--text-muted);">Nenhum teste executado ainda.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -232,7 +313,7 @@
       height: 580,
       backgroundColor: '#050508',
       physics: { default: 'arcade' },
-      scene: { preload: preload, create: create, update: update }
+      scene: { preload: function(){}, create: create, update: update }
     };
 
     const game = new Phaser.Game(config);
@@ -248,12 +329,12 @@
     ];
 
     const agentData = [
-      { name: "Research Agent", color: 0x00f0ff, shirtColor: 0x00bfff, defaultTask: "Scraping Nicho" },
-      { name: "Content Agent", color: 0x00ff66, shirtColor: 0x00cd66, defaultTask: "Gerar Copy Ads" },
-      { name: "Funnel Agent", color: 0xff0077, shirtColor: 0xd10060, defaultTask: "Ajustar VSL" },
-      { name: "Sales Agent", color: 0xffaa00, shirtColor: 0xe69900, defaultTask: "Fechar Leads" },
-      { name: "Delivery Agent", color: 0xa855f7, shirtColor: 0x8b5cf6, defaultTask: "Enviar Acessos" },
-      { name: "Analytics Agent", color: 0x3b82f6, shirtColor: 0x2563eb, defaultTask: "Otimizar ROI" }
+      { name: "Research Agent", shirtColor: 0x00bfff, defaultTask: "Scraping Nicho" },
+      { name: "Content Agent", shirtColor: 0x00cd66, defaultTask: "Gerar Copy Ads" },
+      { name: "Funnel Agent", shirtColor: 0xd10060, defaultTask: "Ajustar VSL" },
+      { name: "Sales Agent", shirtColor: 0xe69900, defaultTask: "Fechar Leads" },
+      { name: "Delivery Agent", shirtColor: 0x8b5cf6, defaultTask: "Enviar Acessos" },
+      { name: "Analytics Agent", shirtColor: 0x2563eb, defaultTask: "Otimizar ROI" }
     ];
 
     function generatePixelSprite(scene, key, skinColor, shirtColor) {
@@ -267,8 +348,6 @@
       ctx.fillStyle = "#111827"; ctx.fillRect(4, 18, 3, 6); ctx.fillRect(9, 18, 3, 6);
       canvas.refresh();
     }
-
-    function preload() {}
 
     function create() {
       const scene = this;
@@ -293,9 +372,6 @@
         g.fillRoundedRect(deskX, deskY, 80, 40, 4);
         g.lineStyle(1, r.color, 0.5);
         g.strokeRoundedRect(deskX, deskY, 80, 40, 4);
-
-        g.fillStyle(r.color, 0.4);
-        g.fillRect(deskX + 20, deskY + 8, 40, 10);
 
         scene.add.text(r.x + 12, r.y + 10, `[ ${r.name} ]`, {
           font: '10px "JetBrains Mono"',
@@ -391,22 +467,24 @@
         const res = await fetch('/api/data');
         const data = await res.json();
 
+        // Métricas Reais
         document.getElementById('leads').innerText = data.metrics.leads;
         document.getElementById('vendas').innerText = data.metrics.vendas;
         document.getElementById('receita').innerText = '€' + data.metrics.receita.toFixed(2);
         document.getElementById('conteudos').innerText = data.metrics.conteudos;
 
+        // Métricas Teste
+        if (data.test_metrics) {
+          document.getElementById('t-leads').innerText = data.test_metrics.leads;
+          document.getElementById('t-vendas').innerText = data.test_metrics.vendas;
+          document.getElementById('t-receita').innerText = '€' + data.test_metrics.receita.toFixed(2);
+        }
+
+        // Tabela Logs Reais
         const tbody = document.getElementById('logs-body');
         tbody.innerHTML = '';
-
         data.logs.forEach(log => {
           const tarefaNome = log.tarefa || log.evento;
-          
-          const targetAgent = agents.find(a => a.name.toLowerCase().includes(log.agente.toLowerCase()));
-          if (targetAgent && targetAgent.taskBubble) {
-            targetAgent.taskBubble.setText(`⚙️ ${tarefaNome.substring(0, 18)}`);
-          }
-
           tbody.innerHTML += `
             <tr>
               <td>${log.hora}</td>
@@ -417,28 +495,68 @@
             </tr>
           `;
         });
+
+        // Tabela Logs Teste
+        const tBodyTest = document.getElementById('test-logs-body');
+        if (data.test_logs && data.test_logs.length > 0) {
+          tBodyTest.innerHTML = '';
+          data.test_logs.forEach(log => {
+            tBodyTest.innerHTML += `
+              <tr>
+                <td>${log.hora}</td>
+                <td><b>${log.agente}</b></td>
+                <td>${log.evento}</td>
+                <td><span class="test-badge">${log.status}</span></td>
+              </tr>
+            `;
+          });
+        }
       } catch (err) {
-        console.error('Erro ao carregar dados do servidor', err);
+        console.error('Erro ao atualizar dashboard', err);
       }
     }
 
-    async function simularLead() {
-      const email = document.getElementById('test-email').value || 'teste@lead.com';
-      await fetch('/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, consent: true })
-      });
-      atualizarDashboard();
+    function logConsole(msg) {
+      document.getElementById('console').innerText = `> [${new Date().toLocaleTimeString()}] ${msg}`;
     }
 
-    async function simularVenda() {
-      const email = document.getElementById('test-email').value || 'comprador@venda.com';
-      await fetch('/purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: 'purchase', email: email, amount: 29.0 })
-      });
+    async function executarTesteLead() {
+      const email = document.getElementById('test-email').value.trim() || 'teste@lead.com';
+      logConsole(`A enviar pedido de teste para /lead (${email})...`);
+      try {
+        const res = await fetch('/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, consent: true, is_test: true })
+        });
+        const json = await res.json();
+        logConsole(json.message || 'Teste concluído!');
+        atualizarDashboard();
+      } catch (e) {
+        logConsole(`ERRO: Não foi possível comunicar com o servidor.`);
+      }
+    }
+
+    async function executarTesteVenda() {
+      const email = document.getElementById('test-email').value.trim() || 'comprador@teste.com';
+      logConsole(`A enviar pedido de teste para /purchase (€29)...`);
+      try {
+        const res = await fetch('/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'purchase', email: email, amount: 29.0, is_test: true })
+        });
+        const json = await res.json();
+        logConsole(json.message || 'Venda de teste registada!');
+        atualizarDashboard();
+      } catch (e) {
+        logConsole(`ERRO: Não foi possível comunicar com o servidor.`);
+      }
+    }
+
+    async function resetarTestes() {
+      await fetch('/api/reset-tests');
+      logConsole('Métricas de teste limpas!');
       atualizarDashboard();
     }
 
