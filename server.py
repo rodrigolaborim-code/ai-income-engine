@@ -9,7 +9,6 @@ from datetime import datetime
 
 PORT = int(os.environ.get("PORT", 8000))
 
-# Base de dados em memória RAM para evitar falhas de gravação em disco no Render
 DB = {
     "metrics": {
         "leads": 0,
@@ -98,7 +97,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             payload = {}
 
-        is_test = payload.get('is_test', True) # Assume teste por omissão caso seja clicado nos botões do painel
+        is_test = payload.get('is_test', True)
 
         if self.path in ['/lead', '/api/lead']:
             email = payload.get('email', 'teste@lead.com').strip().lower()
@@ -132,7 +131,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
-            self._send_json({"ok": True, "message": "Testes limpos!"})
+            self._send_json({"ok": True, "message": "Testes limpos com sucesso!"})
 
         else:
             self._send_json({"ok": False, "reason": "Endpoint nao encontrado"}, status=404)
