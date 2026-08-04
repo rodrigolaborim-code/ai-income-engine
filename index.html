@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Income Engine V2 — Cyber HQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+  <style>
+    :root {
+      --bg: #050508;
+      --card-bg: #0d0e15;
+      --border: #1f2335;
+      --accent-green: #00ff66;
+      --accent-cyan: #00f0ff;
+      --accent-yellow: #ffaa00;
+      --text-white: #ffffff;
+      --text-muted: #565f89;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: var(--bg);
+      color: var(--text-white);
+      margin: 0;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--accent-green);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      color: var(--accent-green);
+      margin: 0;
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+    }
+
+    .system-status {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid var(--accent-cyan);
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent-cyan);
+      padding: 16px;
+      border-radius: 4px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .val {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-white);
+    }
+
+    .game-wrapper {
+      background: #000000;
+      border: 2px solid var(--accent-green);
+      border-radius: 8px;
+      position: relative;
+      width: 100%;
+      height: 580px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 25px rgba(0, 255, 102, 0.15);
+      overflow: hidden;
+    }
+
+    #phaser-game {
+      width: 100%;
+      height: 100%;
+    }
+
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      background: #08090f;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: #a9b1d6;
+    }
+
+    .status {
+      color: var(--accent-green);
+      background: rgba(0, 255, 102, 0.1);
+      border: 1px solid rgba(0, 255, 102, 0.3);
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .task-tag {
+      color: var(--accent-yellow);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <h1>CYBER_OFFICE // LIVE_TASK_MONITOR</h1>
+    <div class="system-status">● 6 AGENTS EXECUTING TASKS</div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Leads Capturados</h3><div class="val" id="leads">-</div></div>
+    <div class="card"><h3>Vendas</h3><div class="val" id="vendas">-</div></div>
+    <div class="card"><h3>Receita Total</h3><div class="val" id="receita">-</div></div>
+    <div class="card"><h3>Conteúdos Gerados</h3><div class="val" id="conteudos">-</div></div>
+  </div>
+
+  <div class="game-wrapper">
+    <div id="phaser-game"></div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Agente</th>
+          <th>Tarefa Atual</th>
+          <th>Evento / Ação</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="logs-body">
+        <tr><td colspan="5" style="color: var(--text-muted);">A LIGAR AO SERVIDOR LOCAL...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'phaser-game',
+      width: 1000,
+      height: 580,
+      backgroundColor: '#050508',
+      physics: { default: 'arcade' },
+      scene: { preload: preload, create: create, update: update }
+    };
+
+    const game = new Phaser.Game(config);
+    let agents = [];
+
+    const rooms = [
+      { id: "RESEARCH", name: "RESEARCH LAB", x: 30, y: 30, w: 280, h: 230, color: 0x00f0ff },
+      { id: "CONTENT", name: "CONTENT STUDIO", x: 360, y: 30, w: 280, h: 230, color: 0x00ff66 },
+      { id: "FUNNEL", name: "FUNNEL ROOM", x: 690, y: 30, w: 280, h: 230, color: 0xff0077 },
+      { id: "SALES", name: "SALES DESK", x: 30, y: 310, w: 280, h: 230, color: 0xffaa00 },
+      { id: "DELIVERY", name: "DELIVERY VAULT", x: 360, y: 310, w: 280, h: 230, color: 0xa855f7 },
+      { id: "ANALYTICS", name: "WAR ROOM", x: 690, y: 310, w: 280, h: 230, color: 0x3b82f6 }
+    ];
+
+    const agentData = [
+      { name: "Research Agent", color: 0x00f0ff, shirtColor: 0x00bfff, defaultTask: "Scraping Nicho" },
+      { name: "Content Agent", color: 0x00ff66, shirtColor: 0x00cd66, defaultTask: "Gerar Copy Ads" },
+      { name: "Funnel Agent", color: 0xff0077, shirtColor: 0xd10060, defaultTask: "Ajustar VSL" },
+      { name: "Sales Agent", color: 0xffaa00, shirtColor: 0xe69900, defaultTask: "Fechar Leads" },
+      { name: "Delivery Agent", color: 0xa855f7, shirtColor: 0x8b5cf6, defaultTask: "Enviar Acessos" },
+      { name: "Analytics Agent", color: 0x3b82f6, shirtColor: 0x2563eb, defaultTask: "Otimizar ROI" }
+    ];
+
+    function generatePixelSprite(scene, key, skinColor, shirtColor) {
+      const canvas = scene.textures.createCanvas(key, 16, 24);
+      const ctx = canvas.context;
+      ctx.fillStyle = "#1e1e2e"; ctx.fillRect(4, 0, 8, 4);
+      ctx.fillStyle = skinColor; ctx.fillRect(4, 4, 8, 6);
+      ctx.fillStyle = "#000000"; ctx.fillRect(5, 6, 2, 2); ctx.fillRect(9, 6, 2, 2);
+      ctx.fillStyle = shirtColor; ctx.fillRect(3, 10, 10, 8);
+      ctx.fillStyle = skinColor; ctx.fillRect(1, 10, 2, 6); ctx.fillRect(13, 10, 2, 6);
+      ctx.fillStyle = "#111827"; ctx.fillRect(4, 18, 3, 6); ctx.fillRect(9, 18, 3, 6);
+      canvas.refresh();
+    }
+
+    function preload() {}
+
+    function create() {
+      const scene = this;
+      const g = scene.add.graphics();
+
+      g.lineStyle(1, 0x121520, 0.5);
+      for (let x = 0; x < 1000; x += 20) { g.lineBetween(x, 0, x, 580); }
+      for (let y = 0; y < 580; y += 20) { g.lineBetween(0, y, 1000, y); }
+
+      rooms.forEach(r => {
+        g.fillStyle(0x0c0f1d, 1);
+        g.fillRect(r.x, r.y, r.w, r.h);
+        g.lineStyle(3, r.color, 0.8);
+        g.strokeRect(r.x, r.y, r.w, r.h);
+
+        g.fillStyle(0x050508, 1);
+        g.fillRect(r.x + (r.w / 2) - 20, r.y + r.h - 3, 40, 6);
+
+        const deskX = r.x + (r.w / 2) - 40;
+        const deskY = r.y + (r.h / 2) - 10;
+        g.fillStyle(0x181c2b, 1);
+        g.fillRoundedRect(deskX, deskY, 80, 40, 4);
+        g.lineStyle(1, r.color, 0.5);
+        g.strokeRoundedRect(deskX, deskY, 80, 40, 4);
+
+        g.fillStyle(r.color, 0.4);
+        g.fillRect(deskX + 20, deskY + 8, 40, 10);
+
+        scene.add.text(r.x + 12, r.y + 10, `[ ${r.name} ]`, {
+          font: '10px "JetBrains Mono"',
+          fill: '#ffffff',
+          fontStyle: 'bold'
+        });
+      });
+
+      agentData.forEach((data, index) => {
+        const textureKey = `agent_pixel_${index}`;
+        generatePixelSprite(scene, textureKey, "#fca5a5", `#${data.shirtColor.toString(16).padStart(6, '0')}`);
+
+        const room = rooms[index];
+        const spawnX = room.x + (room.w / 2);
+        const spawnY = room.y + (room.h / 2) + 20;
+
+        const container = scene.add.container(spawnX, spawnY);
+        const sprite = scene.add.sprite(0, 0, textureKey).setScale(1.5);
+
+        const label = scene.add.text(0, -26, data.name.split(' ')[0].toUpperCase(), {
+          font: '9px "JetBrains Mono"',
+          fill: '#00ff66',
+          backgroundColor: '#000000',
+          padding: { x: 3, y: 1 }
+        }).setOrigin(0.5);
+
+        const taskBubble = scene.add.text(0, -42, `⚙️ ${data.defaultTask}`, {
+          font: '9px "JetBrains Mono"',
+          fill: '#ffaa00',
+          backgroundColor: '#0a0d14',
+          padding: { x: 4, y: 2 }
+        }).setOrigin(0.5);
+
+        container.add([sprite, label, taskBubble]);
+
+        agents.push({
+          name: data.name,
+          container: container,
+          taskBubble: taskBubble,
+          currentRoom: index,
+          targetRoom: index,
+          speed: 1.6,
+          isMoving: false
+        });
+      });
+
+      scene.time.addEvent({
+        delay: 3500,
+        callback: moveRandomAgent,
+        loop: true
+      });
+    }
+
+    function moveRandomAgent() {
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      if (!agent.isMoving) {
+        let newRoomIdx;
+        do {
+          newRoomIdx = Math.floor(Math.random() * rooms.length);
+        } while (newRoomIdx === agent.currentRoom);
+
+        agent.targetRoom = newRoomIdx;
+        agent.isMoving = true;
+      }
+    }
+
+    function update() {
+      agents.forEach(agent => {
+        if (agent.isMoving) {
+          const target = rooms[agent.targetRoom];
+          const targetX = target.x + (target.w / 2);
+          const targetY = target.y + (target.h / 2) + 20;
+
+          const dx = targetX - agent.container.x;
+          const dy = targetY - agent.container.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist > 4) {
+            agent.container.x += (dx / dist) * agent.speed;
+            agent.container.y += (dy / dist) * agent.speed;
+          } else {
+            agent.container.x = targetX;
+            agent.container.y = targetY;
+            agent.currentRoom = agent.targetRoom;
+            agent.isMoving = false;
+          }
+        }
+      });
+    }
+
+    async function atualizarDashboard() {
+      try {
+        const res = await fetch('/api/data');
+        const data = await res.json();
+
+        document.getElementById('leads').innerText = data.metrics.leads;
+        document.getElementById('vendas').innerText = data.metrics.vendas;
+        document.getElementById('receita').innerText = '€' + data.metrics.receita;
+        document.getElementById('conteudos').innerText = data.metrics.conteudos;
+
+        const tbody = document.getElementById('logs-body');
+        tbody.innerHTML = '';
+
+        data.logs.forEach(log => {
+          const tarefaNome = log.tarefa || log.evento;
+          
+          const targetAgent = agents.find(a => a.name.toLowerCase().includes(log.agente.toLowerCase()));
+          if (targetAgent && targetAgent.taskBubble) {
+            targetAgent.taskBubble.setText(`⚙️ ${tarefaNome.substring(0, 18)}`);
+          }
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${log.hora}</td>
+              <td><b>${log.agente}</b></td>
+              <td><span class="task-tag">${tarefaNome}</span></td>
+              <td>${log.evento}</td>
+              <td><span class="status">${log.status}</span></td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        console.error('Erro ao carregar dados do servidor Python', err);
+      }
+    }
+
+    atualizarDashboard();
+    setInterval(atualizarDashboard, 2500);
+  </script>
+</body>
+</html>

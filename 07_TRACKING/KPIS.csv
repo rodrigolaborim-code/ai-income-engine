@@ -1,0 +1,10 @@
+metric,definition,formula,action
+views,conteúdo visto,platform_defined,melhorar distribuição
+clicks,cliques no CTA,clicks/views,melhorar hook/CTA
+leads,novos contactos,unique_leads,melhorar lead magnet
+lead_conversion,conversão de visitante em lead,leads/landing_visits,melhorar landing page
+sales,vendas,orders,melhorar oferta/tráfego
+sales_conversion,conversão em compra,orders/landing_visits,melhorar oferta
+AOV,valor médio da encomenda,revenue/orders,melhorar bundle/upsell
+refund_rate,taxa de reembolso,refunds/orders,rever expectativa/entrega
+revenue_per_lead,receita por lead,revenue/leads,otimizar funil

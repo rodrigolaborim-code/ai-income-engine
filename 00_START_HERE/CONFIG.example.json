@@ -1,0 +1,25 @@
+{
+  "business": {
+    "name": "AI Income Engine",
+    "language": "pt-PT",
+    "niche": "IA e automação",
+    "currency": "EUR"
+  },
+  "offer": {
+    "main_product": "AI Automation Launch Kit",
+    "launch_price": 29,
+    "standard_price": 49,
+    "upsell": "Automation Templates Pro",
+    "upsell_price": 79,
+    "order_bump_price": 9
+  },
+  "urls": {
+    "sales_page": "COLOCAR_URL",
+    "checkout": "COLOCAR_URL",
+    "lead_magnet": "COLOCAR_URL"
+  },
+  "tracking": {
+    "utm_source_required": true,
+    "events": ["lead", "checkout_started", "purchase", "refund", "upsell"]
+  }
+}

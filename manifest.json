@@ -1,0 +1,28 @@
+{
+  "version": "2.0",
+  "created": "2026-08-04",
+  "language": "pt-PT",
+  "positioning": "AI Business in a Box",
+  "note": "Credential-free implementation kit; connect providers before activation.",
+  "files": [
+    "04_CONTENT_ENGINE/50_HOOKS.md",
+    "04_CONTENT_ENGINE/CONTENT_ENGINE.md",
+    "00_START_HERE/CONFIG.example.json",
+    "00_START_HERE/SETUP_CHECKLIST.md",
+    "00_START_HERE/README.md",
+    "02_AUTOMATIONS/WEBHOOKS.md",
+    "02_AUTOMATIONS/ARCHITECTURE.md",
+    "02_AUTOMATIONS/MAKE_SCENARIOS.md",
+    "06_OPERATIONS/QA.md",
+    "06_OPERATIONS/SCALING.md",
+    "01_AGENTS/SYSTEM_PROMPTS.md",
+    "01_AGENTS/AGENTS.md",
+    "07_TRACKING/WEEKLY_REPORT_TEMPLATE.md",
+    "07_TRACKING/KPIS.csv",
+    "03_FUNNEL/FUNNEL.md",
+    "03_FUNNEL/EMAIL_AUTOMATION.md",
+    "05_PRODUCT/PRODUCT_BLUEPRINT.md",
+    "05_PRODUCT/DELIVERY_CHECKLIST.md",
+    "02_AUTOMATIONS/n8n_workflow_specs/lead_capture.workflow.json"
+  ]
+}

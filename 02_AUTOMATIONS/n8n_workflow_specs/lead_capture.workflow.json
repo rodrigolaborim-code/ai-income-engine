@@ -1,0 +1,50 @@
+{
+  "name": "A01 - Lead Capture",
+  "nodes": [
+    {
+      "name": "Webhook Lead",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-income-lead",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "return [{json:{email:$json.email?.trim().toLowerCase(),first_name:$json.first_name||'',source:$json.source||'unknown',campaign:$json.campaign||'',consent:!!$json.consent}}}];"
+      }
+    },
+    {
+      "name": "IF Consent",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.consent}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "AI Agent Placeholder",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "return [{json:{tag:'lead',lead_score:0,next_action:'send_lead_magnet'}}];"
+      }
+    },
+    {
+      "name": "Output",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true,\"next_action\":\"send_lead_magnet\"}"
+      }
+    }
+  ]
+}
