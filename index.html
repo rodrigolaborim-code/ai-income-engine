@@ -85,11 +85,11 @@
       color: var(--text-white);
     }
 
-    /* MAIN CONTENT GRID (GAME + SIDEBAR) */
+    /* MAIN GRID: JOGO + PAINEL DE TESTES */
     .main-workspace {
       display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 20px;
+      grid-template-columns: 620px 1fr;
+      gap: 16px;
       margin-bottom: 20px;
     }
 
@@ -104,10 +104,10 @@
 
     #phaser-game { width: 100%; height: 100%; }
 
-    /* PAINEL LATERAL DIREITO (SANDBOX) */
+    /* SANDBOX SIDEBAR */
     .sidebar-sandbox {
       background: #090b14;
-      border: 2px solid var(--accent-yellow);
+      border: 2px dashed var(--accent-yellow);
       border-radius: 6px;
       padding: 16px;
       display: flex;
@@ -127,11 +127,11 @@
 
     .test-stats {
       background: rgba(255, 170, 0, 0.05);
-      border: 1px dashed rgba(255, 170, 0, 0.3);
+      border: 1px solid rgba(255, 170, 0, 0.2);
       padding: 10px;
       border-radius: 4px;
       font-size: 0.75rem;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .test-stats div {
@@ -145,30 +145,30 @@
     .sandbox-form {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
     .sandbox-form input {
       background: #050508;
       border: 1px solid var(--border);
       color: #fff;
-      padding: 10px;
+      padding: 9px;
       border-radius: 4px;
       font-family: inherit;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .sandbox-form button {
       background: var(--accent-yellow);
       color: #000;
       border: none;
-      padding: 10px;
+      padding: 9px;
       font-weight: 800;
       border-radius: 4px;
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .sandbox-form button.reset {
@@ -185,8 +185,7 @@
       font-size: 0.7rem;
       color: var(--accent-green);
       margin-bottom: 12px;
-      word-break: break-word;
-      min-height: 48px;
+      min-height: 44px;
     }
 
     .test-logs-scroll {
@@ -266,7 +265,7 @@
 
     <!-- PAINEL DE TESTES LATERAL -->
     <div class="sidebar-sandbox">
-      <div class="sandbox-title">🧪 TESTES & SIMULAÇÕES</div>
+      <div class="sandbox-title">🧪 TESTES & SIMULAÇÕES (SANDBOX)</div>
 
       <div class="test-stats">
         <div><span>Leads Teste:</span> <b id="t-leads">0</b></div>
@@ -314,7 +313,7 @@
     const config = {
       type: Phaser.AUTO,
       parent: 'phaser-game',
-      width: 650,
+      width: 620,
       height: 580,
       backgroundColor: '#050508',
       physics: { default: 'arcade' },
@@ -325,12 +324,12 @@
     let agents = [];
 
     const rooms = [
-      { id: "RESEARCH", name: "RESEARCH LAB", x: 20, y: 20, w: 180, h: 240, color: 0x00f0ff },
-      { id: "CONTENT", name: "CONTENT STUDIO", x: 235, y: 20, w: 180, h: 240, color: 0x00ff66 },
-      { id: "FUNNEL", name: "FUNNEL ROOM", x: 450, y: 20, w: 180, h: 240, color: 0xff0077 },
-      { id: "SALES", name: "SALES DESK", x: 20, y: 300, w: 180, h: 240, color: 0xffaa00 },
-      { id: "DELIVERY", name: "DELIVERY VAULT", x: 235, y: 300, w: 180, h: 240, color: 0xa855f7 },
-      { id: "ANALYTICS", name: "WAR ROOM", x: 450, y: 300, w: 180, h: 240, color: 0x3b82f6 }
+      { id: "RESEARCH", name: "RESEARCH LAB", x: 15, y: 20, w: 180, h: 240, color: 0x00f0ff },
+      { id: "CONTENT", name: "CONTENT STUDIO", x: 220, y: 20, w: 180, h: 240, color: 0x00ff66 },
+      { id: "FUNNEL", name: "FUNNEL ROOM", x: 425, y: 20, w: 180, h: 240, color: 0xff0077 },
+      { id: "SALES", name: "SALES DESK", x: 15, y: 300, w: 180, h: 240, color: 0xffaa00 },
+      { id: "DELIVERY", name: "DELIVERY VAULT", x: 220, y: 300, w: 180, h: 240, color: 0xa855f7 },
+      { id: "ANALYTICS", name: "WAR ROOM", x: 425, y: 300, w: 180, h: 240, color: 0x3b82f6 }
     ];
 
     const agentData = [
