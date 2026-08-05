@@ -9,7 +9,7 @@ from datetime import datetime
 
 print("--- DIAGNÓSTICO DE ARRANQUE ---")
 print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
-print("ENV GEMINI_API_KEY presente?:", bool(os.environ.get("GEMINI_API_KEY")))
+print("ENV GROQ_API_KEY presente?:", bool(os.environ.get("GROQ_API_KEY")))
 
 # Importações de bibliotecas externas com tratamento de segurança
 try:
@@ -20,12 +20,12 @@ except Exception as e:
     print("❌ ERRO AO IMPORTAR PYMONGO:", e)
 
 try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-    print("Biblioteca google-generativeai importada com sucesso!")
+    from openai import OpenAI
+    OPENAI_LIB_AVAILABLE = True
+    print("Biblioteca openai importada com sucesso (compatível com Groq)!")
 except ImportError:
-    GEMINI_AVAILABLE = False
-    print("⚠️ google-generativeai em falta no ambiente.")
+    OPENAI_LIB_AVAILABLE = False
+    print("⚠️ Biblioteca openai em falta no ambiente.")
 
 try:
     from imagekitio import ImageKit
@@ -52,17 +52,19 @@ DB_FILE = "database.json"
 MONGO_URI = os.environ.get("MONGO_URI")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 N8N_LEAD_WEBHOOK_URL = os.environ.get("N8N_LEAD_WEBHOOK_URL")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# Configurar o Gemini AI (Plano Gratuito)
-gemini_model = None
-if GEMINI_API_KEY and GEMINI_AVAILABLE:
+# Configurar o cliente Groq (Open-Source via Llama 3.1)
+groq_client = None
+if GROQ_API_KEY and OPENAI_LIB_AVAILABLE:
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        gemini_model = genai.GenerativeModel("gemini-2.0-flash")
-        print("✅ Gemini AI conectado com sucesso!")
+        groq_client = OpenAI(
+            base_url="https://api.groq.com/openai/v1",
+            api_key=GROQ_API_KEY
+        )
+        print("✅ Groq AI (Llama 3.1) conectada com sucesso!")
     except Exception as e:
-        print("❌ Erro ao configurar Gemini AI:", e)
+        print("❌ Erro ao configurar Groq AI:", e)
 
 # ImageKit Config
 imagekit_client = None
@@ -150,7 +152,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V3 carregado com persistência em nuvem e Gemini IA.",
+                "evento": "Motor V3 carregado com persistência em nuvem e Groq Llama 3.1.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -237,21 +239,27 @@ def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
 def run_autonomous_agents():
     while True:
         try:
-            time.sleep(20)
+            time.sleep(30) # Intervalo seguro de 30 segundos
             agente_choice = random.choice(["Research", "Content", "Funnel", "Analytics"])
 
             if agente_choice == "Research":
-                if gemini_model:
-                    res = gemini_model.generate_content("Gera uma oportunidade de mercado curta e direta para infoprodutos de IA em português.")
-                    texto = res.text.strip()
+                if groq_client:
+                    res = groq_client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[{"role": "user", "content": "Gera uma oportunidade de mercado curta e direta para infoprodutos de IA em português."}]
+                    )
+                    texto = res.choices[0].message.content.strip()
                 else:
                     texto = "Nova oportunidade mapeada: Templates de IA para PMEs"
                 log_event("Research Agent", "Análise de Mercado", texto)
 
             elif agente_choice == "Content":
-                if gemini_model:
-                    res = gemini_model.generate_content("Cria um título e um breve resumo (1 parágrafo) em português para um infoproduto digital de automação com IA.")
-                    texto_ia = res.text.strip()
+                if groq_client:
+                    res = groq_client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[{"role": "user", "content": "Cria um título e um breve resumo (1 parágrafo) em português para um infoproduto digital de automação com IA."}]
+                    )
+                    texto_ia = res.choices[0].message.content.strip()
                 else:
                     texto_ia = "Manual Prático de Automação com IA gerado por simulação."
                 
@@ -261,8 +269,8 @@ def run_autonomous_agents():
                     "id": f"content_{int(time.time() * 1000)}",
                     "hora": datetime.now().strftime("%H:%M:%S"),
                     "agente": "Content Agent",
-                    "tipo": "E-Book / IA Gemini",
-                    "titulo": "Gerado por IA (Gemini)",
+                    "tipo": "E-Book / Llama AI",
+                    "titulo": "Gerado por Llama 3.1",
                     "conteudo": texto_ia,
                     "created_at": datetime.now().isoformat()
                 }
