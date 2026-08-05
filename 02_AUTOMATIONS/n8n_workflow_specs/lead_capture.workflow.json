@@ -2,24 +2,26 @@
   "name": "A01 - Lead Capture",
   "nodes": [
     {
-      "name": "Webhook Lead",
-      "type": "n8n-nodes-base.webhook",
       "parameters": {
         "httpMethod": "POST",
         "path": "ai-income-lead",
         "responseMode": "onReceived"
-      }
+      },
+      "name": "Webhook Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
     },
     {
-      "name": "Normalize",
-      "type": "n8n-nodes-base.code",
       "parameters": {
         "jsCode": "return [{json:{email:$json.email?.trim().toLowerCase(),first_name:$json.first_name||'',source:$json.source||'unknown',campaign:$json.campaign||'',consent:!!$json.consent}}}];"
-      }
+      },
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [480, 300]
     },
     {
-      "name": "IF Consent",
-      "type": "n8n-nodes-base.if",
       "parameters": {
         "conditions": {
           "boolean": [
@@ -29,22 +31,76 @@
             }
           ]
         }
-      }
+      },
+      "name": "IF Consent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 300]
     },
     {
-      "name": "AI Agent Placeholder",
-      "type": "n8n-nodes-base.code",
       "parameters": {
         "jsCode": "return [{json:{tag:'lead',lead_score:0,next_action:'send_lead_magnet'}}];"
-      }
+      },
+      "name": "AI Agent Placeholder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [920, 240]
     },
     {
-      "name": "Output",
-      "type": "n8n-nodes-base.respondToWebhook",
       "parameters": {
         "respondWith": "json",
         "responseBody": "={\"ok\":true,\"next_action\":\"send_lead_magnet\"}"
-      }
+      },
+      "name": "Output",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1140, 240]
     }
-  ]
+  ],
+  "connections": {
+    "Webhook Lead": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "IF Consent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Consent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Placeholder": {
+      "main": [
+        [
+          {
+            "node": "Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
 }
