@@ -7,11 +7,16 @@ import threading
 import random
 from datetime import datetime
 
+print("--- DIAGNÓSTICO DE ARRANQUE ---")
+print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
+
 # Importações de bibliotecas externas com tratamento de segurança
 try:
     from pymongo import MongoClient
-except ImportError:
+    print("Biblioteca pymongo importada com sucesso!")
+except Exception as e:
     MongoClient = None
+    print("❌ ERRO AO IMPORTAR PYMONGO:", e)
 
 try:
     from imagekitio import ImageKit
@@ -83,6 +88,8 @@ if MONGO_URI and MongoClient:
         print("✅ CONECTADO AO MONGODB ATLAS COM SUCESSO!")
     except Exception as e:
         print(f"❌ ERRO CRÍTICO NA LIGAÇÃO AO MONGODB: {e}")
+else:
+    print("⚠️ Condição do MongoDB ignorada: MONGO_URI ou MongoClient estão em falta.")
 
 # Inicialização Stripe
 if STRIPE_SECRET_KEY and stripe:
