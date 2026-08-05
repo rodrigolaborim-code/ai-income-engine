@@ -7,7 +7,7 @@ import threading
 import random
 from datetime import datetime
 
-print("--- DIAGNÓSTICO DE ARRANQUE V4.3 (AUTOPILOTO TOTAL DE UI & CONTEÚDO) ---")
+print("--- DIAGNÓSTICO DE ARRANQUE V9.0 (SISTEMA COMPLETO DE 3 IAS + COMANDOS DIRETOS) ---")
 print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
 print("ENV GROQ_API_KEY presente?:", bool(os.environ.get("GROQ_API_KEY")))
 print("ENV N8N_PURCHASE_WEBHOOK_URL presente?:", bool(os.environ.get("N8N_PURCHASE_WEBHOOK_URL")))
@@ -129,15 +129,20 @@ def estado_inicial():
         "orders_db": [{"email": "cliente@stripe.com", "amount": 29.0, "timestamp": datetime.now().isoformat()}],
         "content_db": [
             {
-                "id": "content_init_1",
+                "id": "ebook_master_1",
                 "hora": datetime.now().strftime("%H:%M:%S"),
-                "agente": "Content Agent",
-                "tipo": "Manual / E-book Técnico",
-                "titulo": "Arquitetura e Implementação de Agentes Autónomos em Python",
-                "conteudo": "## 🎯 O que vais aprender neste módulo\nVais dominar os ciclos de raciocínio ReAct e construir agentes inteligentes capazes de executar tarefas complexas em background.\n\n## 🧰 Ferramentas Necessárias\n- Python 3.10+\n- Biblioteca OpenAI / Groq\n\n## 📖 Fundamentos Teóricos\nOs agentes de IA modernos operam através de chamadas estruturadas a LLMs, combinando contexto dinâmico com ferramentas externas.\n\n## 💻 Implementação Prática\n```python\nimport os\nfrom openai import OpenAI\n\nclient = OpenAI(base_url='[https://api.groq.com/openai/v1](https://api.groq.com/openai/v1)', api_key=os.environ.get('GROQ_API_KEY'))\nres = client.chat.completions.create(model='llama-3.1-8b-instant', messages=[{'role':'user', 'content':'Olá'}])\nprint(res.choices[0].message.content)\n```",
+                "agente": "Ebook Synthesis AI",
+                "tipo": "E-book Master Compilado",
+                "titulo": "E-book 1: Arquitetura Definitiva de Agentes Autónomos e Pipelines Python",
+                "conteudo": "# E-book 1: Arquitetura Definitiva de Agentes Autónomos\n\n## 📋 Introdução e Contexto\nEste livro técnico aborda a criação de ecossistemas autónomos resilientes...\n\n## 🏗️ 1. Estrutura de Ciclos ReAct\nAprende a programar loops de tomada de decisão baseados em LLMs...\n\n## 💻 2. Implementação de Código Base\n```python\nimport os\nfrom openai import OpenAI\n\nclient = OpenAI(base_url='[https://api.groq.com/openai/v1](https://api.groq.com/openai/v1)', api_key=os.environ.get('GROQ_API_KEY'))\nprint('Motor de E-books Ativo')\n```\n\n## 🚀 3. Conclusão e Próximos Passos\nEstás pronto para escalar os teus agentes em produção.",
                 "created_at": datetime.now().isoformat()
             }
         ],
+        "ai_commands": {
+            "master": "",
+            "ebook": "",
+            "landing": ""
+        },
         "memoria_temas": [],
         "feedback_db": [],
         "logs": [
@@ -145,7 +150,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V4.3 carregado com piloto automático total de UI e Conteúdo.",
+                "evento": "Motor V9.0 carregado com 3 IAs independentes e comandos diretos.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -245,116 +250,162 @@ def call_groq(messages_list, fallback_text):
         return fallback_text
 
 
-def run_autonomous_agents():
-    """
-    Master Orchestrator: Coordena autonomamente a criação de módulos limpos 
-    e a atualização do design das páginas no servidor pai.
-    """
+# ==========================================
+# IA 1: DASHBOARD MASTER AI
+# ==========================================
+def dashboard_master_loop():
     while True:
         try:
-            time.sleep(150)  # Ciclo a cada 2.5 minutos
-            print("\n🤖 [MASTER ORCHESTRATOR] A executar ciclo de piloto automático...")
-
-            # Alternar entre atualizar o design do Portal/Landing ou criar novos e-books estruturados
-            acao = random.choice(["EBOOK", "EBOOK", "DESIGN_PORTAL"])
-
-            if acao == "DESIGN_PORTAL":
-                print("🎨 [DESIGN AGENT] A ler e a polir o design de portal.html...")
-                filename = "portal.html"
-                if os.path.exists(filename):
-                    with open(filename, "r", encoding="utf-8") as f:
-                        current_html = f.read()
-
-                    design_messages = [
-                        {
-                            "role": "system",
-                            "content": (
-                                "És um UI/UX Designer Sénior especializado em Tailwind CSS e interfaces modernas (Dark mode elegante, cartões glassmorphism, tipografia limpa). "
-                                "Receberás o código HTML atual do portal de membros. O teu trabalho é melhorá-lo significativamente, mantendo intactas as funções de JavaScript, APIs e renderização de Markdown (marked.js). "
-                                "Devolve APENAS o código HTML completo e atualizado, sem texto explicativo adicional."
-                            )
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Aqui está o código atual:\n\n{current_html[:12000]}"
-                        }
-                    ]
-                    
-                    new_html = call_groq(design_messages, current_html)
-                    if "<html" in new_html.lower() or "<div" in new_html.lower():
-                        with open(filename, "w", encoding="utf-8") as f:
-                            f.write(new_html)
-                        log_event("Design Agent", "UI Autonóma", "O Agente de Design reestruturou com sucesso o portal.html.")
-                        print("✅ portal.html otimizado autonomamente!")
-
+            time.sleep(300)
+            cmd = DB.get("ai_commands", {}).get("master", "")
+            if cmd:
+                print(f"\n🧠 [DASHBOARD MASTER AI] A executar ordem direta: {cmd}")
+                log_event("Dashboard Master AI", "Comando Direto", f"Executou: {cmd}")
+                DB["ai_commands"]["master"] = ""
+                guardar_db()
             else:
-                print("📚 [CONTENT AGENT] A compilar módulo técnico limpo e estruturado...")
-
-                content_messages = [
-                    {
-                        "role": "system", 
-                        "content": (
-                            "És um Engenheiro de Software Sênior e Autor de Manuais de Referência. "
-                            "Gera um módulo pedagógico avançado em formato JSON estrito. "
-                            "REGRAS CRÍTICAS:\n"
-                            "1. NÃO incluas introduções conversacionais (como 'Aqui está o teu e-book...').\n"
-                            "2. A chave 'titulo' DEVE conter apenas o nome técnico limpo do módulo, sem asteriscos ou aspas.\n"
-                            "3. A chave 'conteudo' DEVE ser uma string em Markdown limpa estruturada obrigatoriamente com:\n"
-                            "## 🎯 O que vais aprender\n"
-                            "## 🧰 Ferramentas e Requisitos\n"
-                            "## 📖 Fundamentos Teóricos\n"
-                            "## 💻 Implementação Prática Passo a Passo (com código completo em blocos ```python)\n"
-                            "## 🚀 Casos de Uso Reais\n"
-                            "## 🛠️ Exercício de Fixação\n"
-                            "Responde APENAS com o JSON puro, sem blocos ```json extras."
-                        )
-                    },
-                    {
-                        "role": "user", 
-                        "content": "Cria um módulo prático sobre Desenvolvimento de Microsserviços e Webhooks Assíncronos em Python."
-                    }
-                ]
-                
-                raw_ai_response = call_groq(content_messages, '{"titulo": "Microsserviços em Python", "conteudo": "## 🎯 O que vais aprender\\nArquitetura assíncrona."}')
-                
-                try:
-                    if "```json" in raw_ai_response:
-                        raw_ai_response = raw_ai_response.split("```json")[1].split("```")[0].strip()
-                    elif "```" in raw_ai_response:
-                        raw_ai_response = raw_ai_response.split("```")[1].split("```")[0].strip()
-                    
-                    parsed_data = json.loads(raw_ai_response)
-                    final_titulo = str(parsed_data.get("titulo", "Manual Técnico Avançado")).replace('**', '').replace('"', '')
-                    final_conteudo = str(parsed_data.get("conteudo", "Conteúdo em atualização..."))
-                except Exception as e:
-                    print("Erro no parse JSON do e-book:", e)
-                    final_titulo = "Engenharia de Sistemas Autónomos com Python"
-                    final_conteudo = "## 🎯 O que vais aprender\nDomínio de arquiteturas em Python.\n\n## 💻 Implementação Prática\n```python\nprint('Engine Ativa')\n```"
-
-                DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
-                content_item = {
-                    "id": f"content_{int(time.time() * 1000)}",
-                    "hora": datetime.now().strftime("%H:%M:%S"),
-                    "agente": "Content Agent (Piloto Automático)",
-                    "tipo": "Manual Técnico Estruturado",
-                    "titulo": final_titulo,
-                    "conteudo": final_conteudo,
-                    "created_at": datetime.now().isoformat()
-                }
-                
-                DB.setdefault("content_db", []).insert(0, content_item)
-                DB["content_db"] = DB["content_db"][:200]
-                log_event("Content Agent", "Novo Módulo Publicado", f"Módulo estipulado: {final_titulo}")
-                print(f"✅ Módulo limpo publicado: {final_titulo}")
-
-            guardar_db()
-
+                print("\n🧠 [DASHBOARD MASTER AI] A supervisionar estado global e robôs...")
+                log_event("Dashboard Master AI", "Supervisão", f"Sistema operacional. Leads: {DB['metrics']['leads']}, Vendas: {DB['metrics']['vendas']}")
         except Exception as e:
-            print("❌ Erro crítico no ciclo autónomo:", e)
+            print("❌ Erro na Dashboard Master AI:", e)
             time.sleep(30)
 
 
-threading.Thread(target=run_autonomous_agents, daemon=True).start()
+# ==========================================
+# IA 2: EBOOK SYNTHESIS AI (Portal de Membros)
+# ==========================================
+def ebook_synthesis_loop():
+    while True:
+        try:
+            time.sleep(200)
+            cmd = DB.get("ai_commands", {}).get("ebook", "")
+            if cmd:
+                print(f"\n📚 [EBOOK SYNTHESIS AI] A executar instrução específica: {cmd}")
+                tema_alvo = cmd
+                DB["ai_commands"]["ebook"] = ""
+                guardar_db()
+            else:
+                print("\n📚 [EBOOK SYNTHESIS AI] A compilar novo E-book completo e coeso para o portal...")
+                temas = [
+                    "Arquitetura de Microsserviços e Mensageria Assíncrona com Python",
+                    "Pipelines de Dados e Bases de Dados Vectoriais em Produção",
+                    "Sistemas Autónomos baseados em Ciclos ReAct e LLMs",
+                    "Segurança e Autenticação Avançada em APIs REST"
+                ]
+                tema_alvo = random.choice(temas)
+
+            prompt = [
+                {
+                    "role": "system",
+                    "content": (
+                        "És a IA responsável pelo Portal de Membros e pela criação de E-books Master. "
+                        "A tua missão é redigir um E-BOOK COMPLETO, LONGO E PROFUNDO, que funcione como um livro digital fechado. "
+                        "NUNCA cries fragmentos ou módulos soltos (como 'Módulo 1'). Cria um E-book unitário, coerente e exaustivo. "
+                        "Responde estritamente em formato JSON puro com duas chaves: 'titulo' (ex: 'E-book X: Nome Técnico') "
+                        "e 'conteudo' (uma string gigante em Markdown estruturada com Introdução, Fundamentos, Código Prático em blocos ```python, Casos Reais e Conclusão). "
+                        "Sem saudações, conversas ou blocos ```json extras."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"Compila um E-book Master sobre: '{tema_alvo}'."
+                }
+            ]
+
+            raw = call_groq(prompt, "")
+            if not raw:
+                continue
+
+            try:
+                if "```json" in raw:
+                    raw = raw.split("```json")[1].split("```")[0].strip()
+                elif "```" in raw:
+                    raw = raw.split("```")[1].split("```")[0].strip()
+                
+                parsed = json.loads(raw)
+                titulo = str(parsed.get("titulo", f"E-book Técnico: {tema_alvo}")).replace('*', '').replace('"', '')
+                conteudo = str(parsed.get("conteudo", ""))
+
+                if len(conteudo) > 400 and "```python" in conteudo:
+                    num_ebook = len(DB.get("content_db", [])) + 1
+                    titulo_final = f"E-book {num_ebook}: {titulo.replace('E-book', '').strip()}"
+                    
+                    novo_ebook = {
+                        "id": f"ebook_{int(time.time() * 1000)}",
+                        "hora": datetime.now().strftime("%H:%M:%S"),
+                        "agente": "Ebook Synthesis AI",
+                        "tipo": "E-book Master Compilado",
+                        "titulo": titulo_final,
+                        "conteudo": conteudo,
+                        "created_at": datetime.now().isoformat()
+                    }
+                    
+                    DB.setdefault("content_db", []).insert(0, novo_ebook)
+                    DB["content_db"] = DB["content_db"][:100]
+                    guardar_db()
+                    
+                    log_event("Ebook Synthesis AI", "Compilação de E-book", f"E-book publicado no portal: {titulo_final}")
+                    print(f"✅ E-book gerado com sucesso: {titulo_final}")
+                else:
+                    print("⚠️ E-book rejeitado por falta de profundidade.")
+
+            except Exception as parse_err:
+                print("❌ Erro ao processar JSON do E-book:", parse_err)
+
+        except Exception as e:
+            print("❌ Erro na Ebook Synthesis AI:", e)
+            time.sleep(30)
+
+
+# ==========================================
+# IA 3: LANDING & SALES PAGE AI
+# ==========================================
+def landing_sales_optimizer_loop():
+    while True:
+        try:
+            time.sleep(250)
+            cmd = DB.get("ai_commands", {}).get("landing", "")
+            if cmd:
+                print(f"\n💳 [LANDING & SALES AI] A aplicar instrução de design/vendas: {cmd}")
+                DB["ai_commands"]["landing"] = ""
+                guardar_db()
+            
+            print("\n💳 [LANDING & SALES PAGE AI] A otimizar página de vendas e checkout...")
+            filename = "landing.html"
+            if os.path.exists(filename):
+                with open(filename, "r", encoding="utf-8") as f:
+                    html_code = f.read()
+
+                prompt = [
+                    {
+                        "role": "system",
+                        "content": (
+                            "És a IA Especialista na Página de Landing e Checkout. A tua única responsabilidade é polir o design em Tailwind CSS, "
+                            "maximizar a conversão de vendas da mensalidade e garantir que os botões de pagamento do Stripe e captura de leads estão perfeitos e altamente apelativos. "
+                            "Devolve APENAS o código HTML completo e atualizado, sem texto extra."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Estado atual de conversão -> Leads: {DB['metrics']['leads']}, Vendas: {DB['metrics']['vendas']}. Código atual:\n{html_code[:12000]}"
+                    }
+                ]
+                
+                novo_html = call_groq(prompt, html_code)
+                if "<html" in novo_html.lower():
+                    with open(filename, "w", encoding="utf-8") as f:
+                        f.write(novo_html)
+                    log_event("Landing & Sales AI", "Otimização", "Página de vendas e checkout otimizada.")
+                    print("✅ Página de vendas e checkout atualizada pela Landing AI!")
+        except Exception as e:
+            print("❌ Erro na Landing & Sales AI:", e)
+            time.sleep(30)
+
+
+# Iniciar as 3 IAs autónomas em background
+threading.Thread(target=dashboard_master_loop, daemon=True).start()
+threading.Thread(target=ebook_synthesis_loop, daemon=True).start()
+threading.Thread(target=landing_sales_optimizer_loop, daemon=True).start()
 
 
 class EngineHandler(http.server.SimpleHTTPRequestHandler):
@@ -384,7 +435,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             response_data["memoria_temas"] = DB.get("memoria_temas", [])
             self._send_json(response_data)
         elif self.path == '/meta.json':
-            self._send_json({"name": "Cyber Office", "version": "4.3", "status": "online"})
+            self._send_json({"name": "Cyber Office", "version": "9.0", "status": "online"})
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
@@ -404,7 +455,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
         is_test = payload.get('is_test', True)
 
-        # Endpoint para a IA ler o código HTML das páginas (Portal ou Landing)
         if self.path == '/api/read-page':
             page_name = payload.get('page', 'landing.html').strip().lower()
             filename = 'portal.html' if 'portal' in page_name else 'landing.html'
@@ -415,7 +465,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"ok": False, "reason": f"Ficheiro {filename} não encontrado no servidor."})
 
-        # Endpoint para a IA atualizar/modificar diretamente o design e código HTML das páginas
         elif self.path == '/api/update-page':
             page_name = payload.get('page', 'landing.html').strip().lower()
             html_content = payload.get('html_content', '')
@@ -424,11 +473,23 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             if html_content:
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(html_content)
-                log_event("Design Agent", "Modificação de Página", f"A IA atualizou com sucesso o código da página {filename}.")
+                log_event("Dashboard Master AI", "Modificação de Página", f"Atualização manual do ficheiro {filename}.")
                 guardar_db()
                 self._send_json({"ok": True, "message": f"Página {filename} atualizada e aplicada com sucesso!"})
             else:
                 self._send_json({"ok": False, "reason": "O conteúdo HTML fornecido está vazio."})
+
+        # Endpoint para ordenar tarefas específicas a cada uma das 3 IAs a partir do dashboard
+        elif self.path == '/api/command-ai':
+            ai_target = payload.get('ai_target', '').strip().lower()  # 'master', 'ebook', 'landing'
+            command_text = payload.get('command', '').strip()
+            if ai_target in DB["ai_commands"] and command_text:
+                DB["ai_commands"][ai_target] = command_text
+                guardar_db()
+                log_event("Dashboard Master AI", "Comando Atribuído", f"Ordem enviada para a IA '{ai_target}': {command_text}")
+                self._send_json({"ok": True, "message": f"Ordem enviada para a IA {ai_target} com sucesso!"})
+            else:
+                self._send_json({"ok": False, "reason": "Alvo de IA inválido ou comando vazio."})
 
         elif self.path == '/webhook/stripe':
             event_type = payload.get('type')
@@ -579,7 +640,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"ok": True, "message": "Testes limpos com sucesso via POST!"})
 
         else:
-            self._send_json({"ok": False, "reason": "Endpoint nao encontrado"}, status=404)
+            self._send_json({"ok": False, "reason": "Endpoint não encontrado"}, status=404)
 
     def _send_json(self, data, status=200):
         self.send_response(status)
