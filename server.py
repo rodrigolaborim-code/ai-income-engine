@@ -134,16 +134,7 @@ def estado_inicial():
                 "agente": "Content Agent",
                 "tipo": "Módulo Prático",
                 "titulo": "Como Criar um Agente de IA em Python do Zero",
-                "conteudo": "## Visão Geral do Módulo\n\nNeste guia passo a passo, vais aprender a criar um agente autónomo de inteligência artificial simples utilizando Python e APIs de LLM.\n\n### Passo 1: Preparar o Ambiente\n\nPara começar, cria um ficheiro `main.py` e instala a biblioteca oficial da OpenAI ou Groq:\n```bash\npip install openai\n```\n\n### Passo 2: Configurar o Código Base\n\nAdiciona o seguinte código para ligar a tua aplicação ao modelo de linguagem:\n```python
-from openai import OpenAI
-
-client = OpenAI(api_key=\"TEU_API_KEY\")
-response = client.chat.completions.create(
-    model=\"llama-3.1-8b-instant\",
-    messages=[{\"role\": \"user\", \"content\": \"Olá, agente!\"}]
-)
-print(response.choices[0].message.content)
-```\n\n### Passo 3: Executar e Testar\n\nExecuta o script no terminal para ver a primeira resposta automatizada do teu agente de IA.",
+                "conteudo": "## Visão Geral do Módulo\n\nNeste guia passo a passo, vais aprender a criar um agente autónomo de inteligência artificial simples utilizando Python e APIs de LLM.\n\n### Passo 1: Preparar o Ambiente\n\nPara começar, cria um ficheiro `main.py` e instala a biblioteca oficial da OpenAI ou Groq:\n```bash\npip install openai\n```\n\n### Passo 2: Configurar o Código Base\n\nAdiciona o seguinte código para ligar a tua aplicação ao modelo de linguagem:\n```python\nfrom openai import OpenAI\n\nclient = OpenAI(api_key=\"TEU_API_KEY\")\nresponse = client.chat.completions.create(\n    model=\"llama-3.1-8b-instant\",\n    messages=[{\"role\": \"user\", \"content\": \"Olá, agente!\"}]\n)\nprint(response.choices[0].message.content)\n```\n\n### Passo 3: Executar e Testar\n\nExecuta o script no terminal para ver a primeira resposta automatizada do teu agente de IA.",
                 "created_at": datetime.now().isoformat()
             }
         ],
@@ -279,8 +270,9 @@ def run_autonomous_agents():
                         "És um Instrutor Sénior de Programação e Inteligência Artificial. "
                         "Deves gerar um módulo pedagógico completo, rico em conteúdo, com estrutura passo a passo, "
                         "explicações profundas, blocos de código práticos e formatação Markdown limpa (usando ##, ###, listas e blocos ```python). "
+                        "ATENÇÃO: O campo 'conteudo' DEVE ser obrigatoriamente uma STRING de texto simples em Markdown (com os passos explicados), NUNCA um objeto JSON ou dicionário aninhado. "
                         "Não menciones que és uma IA ou que o texto foi gerado por agentes. Escreve como um autor especialista num curso profissional. "
-                        "Responde estritamente em formato JSON puro com as chaves exatas: 'titulo' e 'conteudo'. "
+                        "Responde estritamente em formato JSON puro com as chaves exatas: 'titulo' (string) e 'conteudo' (string de texto formatada em Markdown). "
                         "NÃO incluas blocos ```json extras à volta da resposta."
                     )
                 },
@@ -300,6 +292,13 @@ def run_autonomous_agents():
                 parsed_data = json.loads(raw_ai_response)
                 final_titulo = parsed_data.get("titulo", "Módulo Prático de Programação")
                 final_conteudo = parsed_data.get("conteudo", "Conteúdo prático em atualização...")
+                
+                # Blindagem absoluta contra dicionários ou objetos no conteúdo
+                if isinstance(final_conteudo, dict):
+                    final_conteudo = "\n\n".join([f"### {k}\n{v}" for k, v in final_conteudo.items()])
+                elif not isinstance(final_conteudo, str):
+                    final_conteudo = str(final_conteudo)
+
             except Exception:
                 final_titulo = "Módulo Prático: Guia Passo a Passo"
                 final_conteudo = "## Módulo Prático\n\nNesta aula vais aprender os conceitos chave para automatizar os teus processos.\n\n### Passo 1: Estruturação\nDefine os objetivos do teu sistema..."
@@ -316,7 +315,8 @@ def run_autonomous_agents():
             }
             
             DB.setdefault("content_db", []).insert(0, content_item)
-            DB["content_db"] = DB["content_db"][:30]
+            # Aumentado o limite para 200 para guardar todos os conteúdos gerados sem apagar os antigos
+            DB["content_db"] = DB["content_db"][:200]
             log_event("Content Agent", "Portal Atualizado", f"Novo módulo publicado: {final_titulo}")
 
             supervisor_messages = [
