@@ -275,10 +275,13 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"ok": True, "message": "Conteúdo e ficheiros limpos com sucesso!"})
 
         # ------------------------------------------
-        # CAPTURA DE LEADS (Teste / Real)
+        # CAPTURA DE LEADS (Teste / Real) com Disparo para n8n
         # ------------------------------------------
         elif self.path in ['/lead', '/api/lead']:
             email = payload.get('email', 'teste@lead.com').strip().lower()
+            first_name = payload.get('first_name', 'Lead')
+            source = payload.get('source', 'dashboard_sandbox')
+            consent = payload.get('consent', True)
 
             if is_test:
                 DB["test_metrics"]["leads"] += 1
@@ -289,6 +292,22 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 DB["leads_db"].append({"email": email, "created_at": datetime.now().isoformat()})
                 guardar_db()
                 log_event("Funnel Agent", "Captura de Lead", f"Novo Lead Registado: {email}", is_test=False)
+
+            # Disparo automático para o n8n via Webhook configurado nas variáveis do Render
+            n8n_url = os.environ.get("N8N_LEAD_WEBHOOK_URL")
+            if n8n_url:
+                try:
+                    import urllib.request
+                    req_data = json.dumps({
+                        "email": email,
+                        "first_name": first_name,
+                        "source": source,
+                        "consent": consent
+                    }).encode('utf-8')
+                    req = urllib.request.Request(n8n_url, data=req_data, headers={'Content-Type': 'application/json'})
+                    urllib.request.urlopen(req, timeout=5)
+                except Exception as e:
+                    print(f"Erro ao disparar webhook para n8n: {e}")
 
             self._send_json({"ok": True, "message": f"Lead {'[TESTE]' if is_test else '[REAL]'} guardada com sucesso!"})
 
