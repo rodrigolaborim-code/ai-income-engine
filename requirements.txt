@@ -4,3 +4,4 @@ dnspython
 imagekitio
 cloudinary
 stripe
+google-generativeai
