@@ -365,7 +365,17 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path == '/api/data':
+        # 1. Rota principal para o público: Serve a Landing Page de Vendas
+        if self.path == '/' or self.path == '':
+            self.path = '/landing.html'
+            return super().do_GET()
+        
+        # 2. A tua Casa de Máquinas privada (Mantém o index.html original intacto)
+        elif self.path in ['/dashboard', '/admin', '/index.html']:
+            self.path = '/index.html'
+            return super().do_GET()
+
+        elif self.path == '/api/data':
             response_data = DB.copy()
             response_data["contents"] = DB.get("content_db", [])
             response_data["memoria_temas"] = DB.get("memoria_temas", [])
