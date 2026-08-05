@@ -247,10 +247,9 @@ def call_groq(messages_list, fallback_text):
 def run_autonomous_agents():
     while True:
         try:
-            time.sleep(60) # Intervalo calculado para evolução e otimização autónoma do site
+            time.sleep(60)
             print("💬 [ECOSSISTEMA AUTÓNOMO] A IA está a reescrever e otimizar os textos da página...")
 
-            # 1. RESEARCH AGENT (Define o foco comercial com base no mercado)
             research_messages = [
                 {
                     "role": "system", 
@@ -264,7 +263,6 @@ def run_autonomous_agents():
             research_text = call_groq(research_messages, "Foco em produtividade e redução de custos para negócios com IA.")
             log_event("Research Agent", "Análise de Mercado", research_text)
 
-            # 2. CONTENT AGENT (Cria cópia persuasiva estruturada para o site)
             content_messages = [
                 {
                     "role": "system", 
@@ -277,7 +275,6 @@ def run_autonomous_agents():
             ]
             raw_ai_response = call_groq(content_messages, '{"titulo": "Manual Prático de Automação com IA", "conteudo": "Aceda ao sistema definitivo para automatizar processos e escalar resultados."}')
             
-            # Limpeza defensiva do JSON gerado pela IA
             try:
                 if "```json" in raw_ai_response:
                     raw_ai_response = raw_ai_response.split("```json")[1].split("```")[0].strip()
@@ -291,7 +288,6 @@ def run_autonomous_agents():
                 final_titulo = "Manual Prático de Automação com IA"
                 final_conteudo = "Aceda ao sistema definitivo para automatizar processos, eliminar tarefas repetitivas e escalar os seus resultados."
 
-            # Guardar o novo ativo na BD para atualizar o site automaticamente
             DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
             content_item = {
                 "id": f"content_{int(time.time() * 1000)}",
@@ -307,7 +303,6 @@ def run_autonomous_agents():
             DB["content_db"] = DB["content_db"][:30]
             log_event("Content Agent", "Atualização da Página", f"Novo copy gerado e aplicado ao site: {final_titulo}")
 
-            # 3. SUPERVISOR AI (Valida a segurança e qualidade do site)
             supervisor_messages = [
                 {
                     "role": "system", 
@@ -327,7 +322,6 @@ def run_autonomous_agents():
             print("Erro no ciclo autónomo de atualização:", e)
 
 
-# Iniciar motor de agentes autónomos em background
 threading.Thread(target=run_autonomous_agents, daemon=True).start()
 
 
@@ -340,12 +334,10 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        # 1. Rota principal para o público: Serve a Landing Page de Vendas
         if self.path == '/' or self.path == '':
             self.path = '/landing.html'
             return super().do_GET()
         
-        # 2. A tua Casa de Máquinas privada
         elif self.path in ['/dashboard', '/admin', '/index.html']:
             self.path = '/index.html'
             return super().do_GET()
@@ -388,7 +380,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 DB["orders_db"].append({"email": email, "amount": amount_total, "timestamp": datetime.now().isoformat()})
                 guardar_db()
                 
-                # Disparar webhook para o n8n enviar o e-mail de entrega ao cliente
                 if N8N_PURCHASE_WEBHOOK_URL:
                     try:
                         import urllib.request
@@ -489,24 +480,23 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 DB["metrics"]["receita"] += amount
                 DB["orders_db"].append({"email": email, "amount": amount, "timestamp": datetime.now().isoformat()})
                 guardar_db()
-
-                # Disparar webhook para o n8n mesmo nas simulações/compras manuais se configurado
-                if N8N_PURCHASE_WEBHOOK_URL:
-                    try:
-                        import urllib.request
-                        current_product = DB.get("content_db", [{}])[0].get("titulo", "Manual Prático de Automação com IA")
-                        req_data = json.dumps({
-                            "email": email,
-                            "amount": amount,
-                            "produto": current_product,
-                            "data": datetime.now().isoformat()
-                        }).encode('utf-8')
-                        req = urllib.request.Request(N8N_PURCHASE_WEBHOOK_URL, data=req_data, headers={'Content-Type': 'application/json'})
-                        urllib.request.urlopen(req, timeout=5)
-                    except Exception as e:
-                        print(f"Erro ao disparar webhook de compra para o n8n: {e}")
-
                 log_event("Sales Agent", "Processar Pagamento", f"COMPRA REAL: +€{amount:.2f} ({email})", is_test=False)
+
+            # DISPARO PARA O N8N CORRETAMENTE FORA DO IF/ELSE
+            if N8N_PURCHASE_WEBHOOK_URL:
+                try:
+                    import urllib.request
+                    current_product = DB.get("content_db", [{}])[0].get("titulo", "Manual Prático de Automação com IA")
+                    req_data = json.dumps({
+                        "email": email,
+                        "amount": amount,
+                        "produto": current_product,
+                        "data": datetime.now().isoformat()
+                    }).encode('utf-8')
+                    req = urllib.request.Request(N8N_PURCHASE_WEBHOOK_URL, data=req_data, headers={'Content-Type': 'application/json'})
+                    urllib.request.urlopen(req, timeout=5)
+                except Exception as e:
+                    print(f"Erro ao disparar webhook de compra para o n8n: {e}")
 
             self._send_json({"ok": True, "message": f"Venda {'[TESTE]' if is_test else '[REAL]'} de €{amount:.2f} processada!"})
 
