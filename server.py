@@ -7,16 +7,32 @@ import threading
 import random
 from datetime import datetime
 
-# Bibliotecas externas (Pymongo, Stripe)
+# Importações de bibliotecas externas com tratamento de segurança
 try:
     from pymongo import MongoClient
 except ImportError:
     MongoClient = None
 
 try:
+    from imagekitio import ImageKit
+except ImportError:
+    ImageKit = None
+
+try:
+    import cloudinary
+    import cloudinary.uploader
+except ImportError:
+    cloudinary = None
+
+try:
     import stripe
 except ImportError:
     stripe = None
+
+try:
+    import flask
+except ImportError:
+    flask = None
 
 PORT = int(os.environ.get("PORT", 8000))
 DB_FILE = "database.json"
@@ -28,19 +44,47 @@ MONGO_URI = os.environ.get("MONGO_URI")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 N8N_LEAD_WEBHOOK_URL = os.environ.get("N8N_LEAD_WEBHOOK_URL")
 
-# ImageKit
+# ImageKit Config
 IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY")
 IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY")
 IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT")
 
-# Inicialização MongoDB com Teste de Conexão
+imagekit_client = None
+if IMAGEKIT_PRIVATE_KEY and IMAGEKIT_PUBLIC_KEY and IMAGEKIT_URL_ENDPOINT and ImageKit:
+    try:
+        imagekit_client = ImageKit(
+            public_key=IMAGEKIT_PUBLIC_KEY,
+            private_key=IMAGEKIT_PRIVATE_KEY,
+            url_endpoint=IMAGEKIT_URL_ENDPOINT
+        )
+        print("Connected to ImageKit successfully!")
+    except Exception as e:
+        print("❌ ImageKit Initialization Error:", e)
+
+# Cloudinary Config
+CLOUDINARY_CLOUD = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+
+if CLOUDINARY_CLOUD and cloudinary:
+    try:
+        cloudinary.config(
+            cloud_name=CLOUDINARY_CLOUD,
+            api_key=CLOUDINARY_KEY,
+            api_secret=CLOUDINARY_SECRET
+        )
+        print("Connected to Cloudinary successfully!")
+    except Exception as e:
+        print("❌ Cloudinary Initialization Error:", e)
+
+# Inicialização MongoDB com Teste de Conexão e DNS SRV (pymongo[srv] / dnspython)
 db_mongo = None
 if MONGO_URI and MongoClient:
     try:
         mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
         mongo_client.admin.command('ping')
         db_mongo = mongo_client["motor_de_renda"]
-        print(" Connected to MongoDB Atlas successfully!")
+        print("Connected to MongoDB Atlas successfully!")
     except Exception as e:
         print("❌ MongoDB Connection Error:", e)
 
@@ -65,7 +109,7 @@ def estado_inicial():
         "leads_db": [],
         "orders_db": [],
         "content_db": [],
-        "memoria_temas": [],
+        "memoria_temas": [],  # Registos ultra-leves anti-repetição
         "feedback_db": [],
         "logs": [],
         "test_logs": []
@@ -76,6 +120,7 @@ def carregar_db():
     base = estado_inicial()
     data = None
     
+    # 1. Tentar carregar do MongoDB Atlas
     if db_mongo is not None:
         try:
             doc = db_mongo["app_state"].find_one({"_id": "global_state"})
@@ -85,6 +130,7 @@ def carregar_db():
         except Exception as e:
             print("Erro ao carregar do MongoDB:", e)
 
+    # 2. Fallback para ficheiro JSON local se necessário
     if not data:
         for filename in [DB_FILE, "banco de dados.json"]:
             if os.path.exists(filename):
@@ -105,6 +151,7 @@ def carregar_db():
 
 
 def guardar_db():
+    # 1. Guardar no MongoDB Atlas
     if db_mongo is not None:
         try:
             db_mongo["app_state"].replace_one(
@@ -115,6 +162,7 @@ def guardar_db():
         except Exception as e:
             print("Erro ao guardar no MongoDB:", e)
 
+    # 2. Guardar em ficheiro local (backup)
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(DB, f, ensure_ascii=False, indent=2)
@@ -183,6 +231,7 @@ def run_autonomous_agents():
             log_event("Analytics Agent", "Auditoria de KPIs", f"Métricas atualizadas: {DB['metrics']['vendas']} vendas e €{DB['metrics']['receita']:.2f} acumulados")
 
 
+# Iniciar motor de agentes autónomos em background
 threading.Thread(target=run_autonomous_agents, daemon=True).start()
 
 
@@ -247,8 +296,25 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         # ------------------------------------------
         elif self.path == '/api/purge-content':
             content_id = payload.get("content_id")
+            imagekit_file_id = payload.get("imagekit_file_id")
+            cloudinary_public_id = payload.get("cloudinary_public_id")
             tema = payload.get("tema")
 
+            # 1. Eliminar ficheiro do ImageKit (se aplicável)
+            if imagekit_file_id and imagekit_client:
+                try:
+                    imagekit_client.delete_file(imagekit_file_id)
+                except Exception as e:
+                    print("Erro ImageKit Purge:", e)
+
+            # 2. Eliminar ficheiro do Cloudinary (se aplicável)
+            if cloudinary_public_id and cloudinary:
+                try:
+                    cloudinary.uploader.destroy(cloudinary_public_id)
+                except Exception as e:
+                    print("Erro Cloudinary Purge:", e)
+
+            # 3. Guardar tema na memória anti-repetição (< 1KB)
             if tema:
                 DB.setdefault("memoria_temas", []).append({
                     "tema": tema,
@@ -256,6 +322,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 })
                 DB["memoria_temas"] = DB["memoria_temas"][-200:]
 
+            # 4. Remover conteúdo da lista ativa
             if content_id and "content_db" in DB:
                 DB["content_db"] = [item for item in DB["content_db"] if item.get("id") != content_id]
 
@@ -322,6 +389,20 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"ok": True, "message": f"Venda {'[TESTE]' if is_test else '[REAL]'} de €{amount:.2f} processada!"})
 
         # ------------------------------------------
+        # FEEDBACK / OPINIÃO DO UTILIZADOR
+        # ------------------------------------------
+        elif self.path in ['/feedback', '/api/feedback']:
+            comentario = payload.get('comentario', '').strip()
+            if comentario:
+                DB.setdefault("feedback_db", []).insert(0, {
+                    "comentario": comentario,
+                    "timestamp": datetime.now().isoformat()
+                })
+                guardar_db()
+                log_event("Analytics Agent", "Feedback Recebido", "Novo comentário registado")
+            self._send_json({"ok": True, "message": "Feedback registado com sucesso!"})
+
+        # ------------------------------------------
         # RESET DE TESTES
         # ------------------------------------------
         elif self.path == '/api/reset-tests':
@@ -346,5 +427,5 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 socketserver.TCPServer.allow_reuse_address = True
 
 with socketserver.TCPServer(("0.0.0.0", PORT), EngineHandler) as httpd:
-    print(f" Servidor a rodar na porta {PORT}...")
+    print(f"Servidor a rodar na porta {PORT}...")
     httpd.serve_forever()
