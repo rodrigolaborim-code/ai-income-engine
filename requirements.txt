@@ -1,4 +1,6 @@
-pymongo
+flask
+pymongo[srv]
 dnspython
+imagekitio
 cloudinary
 stripe
