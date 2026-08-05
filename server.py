@@ -216,6 +216,8 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             response_data["contents"] = DB.get("content_db", [])
             response_data["memoria_temas"] = DB.get("memoria_temas", [])
             self._send_json(response_data)
+        elif self.path == '/meta.json':
+            self._send_json({"name": "Cyber Office", "version": "2.0", "status": "online"})
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
