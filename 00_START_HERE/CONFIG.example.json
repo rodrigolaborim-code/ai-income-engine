@@ -1,25 +1,12 @@
 {
-  "business": {
-    "name": "AI Income Engine",
-    "language": "pt-PT",
-    "niche": "IA e automação",
-    "currency": "EUR"
-  },
-  "offer": {
-    "main_product": "AI Automation Launch Kit",
-    "launch_price": 29,
-    "standard_price": 49,
-    "upsell": "Automation Templates Pro",
-    "upsell_price": 79,
-    "order_bump_price": 9
-  },
-  "urls": {
-    "sales_page": "COLOCAR_URL",
-    "checkout": "COLOCAR_URL",
-    "lead_magnet": "COLOCAR_URL"
-  },
-  "tracking": {
-    "utm_source_required": true,
-    "events": ["lead", "checkout_started", "purchase", "refund", "upsell"]
-  }
+  "PORT": 8000,
+  "MONGO_URI": "mongodb+srv://utilizador:password@cluster.mongodb.net/?retryWrites=true&w=majority",
+  "STRIPE_SECRET_KEY": "sk_test_...",
+  "N8N_LEAD_WEBHOOK_URL": "https://o-teu-n8n.webhook.url/lead",
+  "IMAGEKIT_PUBLIC_KEY": "public_...",
+  "IMAGEKIT_PRIVATE_KEY": "private_...",
+  "IMAGEKIT_URL_ENDPOINT": "https://ik.imagekit.io/o-teu-endpoint",
+  "CLOUDINARY_CLOUD_NAME": "o-teu-cloud-name",
+  "CLOUDINARY_API_KEY": "o-teu-api-key",
+  "CLOUDINARY_API_SECRET": "o-teu-api-secret"
 }
