@@ -7,7 +7,7 @@ import threading
 import random
 from datetime import datetime
 
-print("--- DIAGNÓSTICO DE ARRANQUE V4.1 (MÓDULOS ESTRUTURADOS) ---")
+print("--- DIAGNÓSTICO DE ARRANQUE V4.3 (AUTOPILOTO TOTAL DE UI & CONTEÚDO) ---")
 print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
 print("ENV GROQ_API_KEY presente?:", bool(os.environ.get("GROQ_API_KEY")))
 print("ENV N8N_PURCHASE_WEBHOOK_URL presente?:", bool(os.environ.get("N8N_PURCHASE_WEBHOOK_URL")))
@@ -61,7 +61,7 @@ groq_client = None
 if GROQ_API_KEY and OPENAI_LIB_AVAILABLE:
     try:
         groq_client = OpenAI(
-            base_url="[https://api.groq.com/openai/v1](https://api.groq.com/openai/v1)",
+            base_url="https://api.groq.com/openai/v1",
             api_key=GROQ_API_KEY
         )
         print("✅ Groq AI (Llama 3.1) conectada com sucesso!")
@@ -118,7 +118,7 @@ def estado_inicial():
             "leads": 2,
             "vendas": 1,
             "receita": 29.0,
-            "conteudos": 2
+            "conteudos": 1
         },
         "test_metrics": {
             "leads": 0,
@@ -133,8 +133,8 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "Content Agent",
                 "tipo": "Manual / E-book Técnico",
-                "titulo": "Manual Definitivo: Arquitetura e Implementação de Agentes de IA",
-                "conteudo": "## 🎯 O que vais aprender neste módulo\nNeste capítulo completo, vais dominar a arquitetura Reasoning and Acting (ReAct) e aprender a programar agentes autónomos resilientes em Python utilizando a API da Groq.\n\n## 🧰 Ferramentas e Requisitos\n- Python 3.10+\n- Biblioteca `openai` (compatível com Groq)\n- Chave de API Groq configurada no ambiente\n\n## 📖 1. Fundamentos Teóricos\nOs agentes autónomos diferem dos modelos tradicionais de chat por possuírem capacidade de tomada de decisão em ciclos iterativos de raciocínio, ação e observação.\n\n## 💻 2. Implementação Prática Passo a Passo\nAbaixo encontra-se o script de inicialização do motor de inferência:\n```python\nimport os\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url=\"https://api.groq.com/openai/v1\",\n    api_key=os.environ.get(\"GROQ_API_KEY\")\n)\n\nresponse = client.chat.completions.create(\n    model=\"llama-3.1-8b-instant\",\n    messages=[{\"role\": \"user\", \"content\": \"Executar ciclo autónomo.\"}]\n)\nprint(response.choices[0].message.content)\n```\n\n## 🚀 3. Casos de Uso Reais\n- Automação de atendimento ao cliente com ferramentas de busca.\n- Sistemas de recomendação e processamento assíncrono de dados.\n\n## 🛠️ 4. Exercício Prático de Fixação\nAdiciona tratamento de erros `try...except` à chamada da API para lidar com falhas de rede de forma elegante.",
+                "titulo": "Arquitetura e Implementação de Agentes Autónomos em Python",
+                "conteudo": "## 🎯 O que vais aprender neste módulo\nVais dominar os ciclos de raciocínio ReAct e construir agentes inteligentes capazes de executar tarefas complexas em background.\n\n## 🧰 Ferramentas Necessárias\n- Python 3.10+\n- Biblioteca OpenAI / Groq\n\n## 📖 Fundamentos Teóricos\nOs agentes de IA modernos operam através de chamadas estruturadas a LLMs, combinando contexto dinâmico com ferramentas externas.\n\n## 💻 Implementação Prática\n```python\nimport os\nfrom openai import OpenAI\n\nclient = OpenAI(base_url='[https://api.groq.com/openai/v1](https://api.groq.com/openai/v1)', api_key=os.environ.get('GROQ_API_KEY'))\nres = client.chat.completions.create(model='llama-3.1-8b-instant', messages=[{'role':'user', 'content':'Olá'}])\nprint(res.choices[0].message.content)\n```",
                 "created_at": datetime.now().isoformat()
             }
         ],
@@ -145,7 +145,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V4.1 carregado com módulos estruturados em formato de aula completa.",
+                "evento": "Motor V4.3 carregado com piloto automático total de UI e Conteúdo.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -236,7 +236,7 @@ def call_groq(messages_list, fallback_text):
         res = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=messages_list,
-            temperature=0.7,
+            temperature=0.6,
             max_tokens=4096
         )
         return res.choices[0].message.content.strip()
@@ -246,89 +246,112 @@ def call_groq(messages_list, fallback_text):
 
 
 def run_autonomous_agents():
+    """
+    Master Orchestrator: Coordena autonomamente a criação de módulos limpos 
+    e a atualização do design das páginas no servidor pai.
+    """
     while True:
         try:
-            time.sleep(120)  # Ciclo a cada 2 minutos
-            print("📚 [ECOSSISTEMA AUTÓNOMO] A compilar um módulo estruturado de nível profissional...")
+            time.sleep(150)  # Ciclo a cada 2.5 minutos
+            print("\n🤖 [MASTER ORCHESTRATOR] A executar ciclo de piloto automático...")
 
-            research_messages = [
-                {
-                    "role": "system", 
-                    "content": "És um Arquiteto de Software e Diretor Pedagógico de cursos de tecnologia."
-                },
-                {
-                    "role": "user", 
-                    "content": "Define um tema técnico avançado e altamente prático para um módulo de curso (ex: 'Desenvolvimento de Agentes Autónomos com LangChain', 'Automação de Processos com Python e Webhooks', 'Arquitetura de Bases de Dados Vectoriais para IA', 'Sistemas de Recomendação em Tempo Real')."
-                }
-            ]
-            research_text = call_groq(research_messages, "Desenvolvimento de Sistemas Autónomos com Python")
-            log_event("Research Agent", "Pesquisa de Módulo", research_text)
+            # Alternar entre atualizar o design do Portal/Landing ou criar novos e-books estruturados
+            acao = random.choice(["EBOOK", "EBOOK", "DESIGN_PORTAL"])
 
-            content_messages = [
-                {
-                    "role": "system", 
-                    "content": (
-                        "És um Instrutor Sénior de Programação e Autor de Manuais Técnicos de Referência. "
-                        "Deves gerar um MÓDULO PEDAGÓGICO COMPLETO e PROFISSIONAL, estruturado exatamente como um capítulo de um livro de curso avançado. "
-                        "O conteúdo DEVE seguir estritamente esta estrutura em Markdown:\n"
-                        "## 🎯 O que vais aprender neste módulo\n(parágrafo detalhado com os objetivos)\n\n"
-                        "## 🧰 Ferramentas e Requisitos\n- Ferramenta 1\n- Ferramenta 2\n\n"
-                        "## 📖 1. Fundamentos Teóricos\n(explicação profunda e extensa)\n\n"
-                        "## 💻 2. Implementação Prática Passo a Passo\n(código comentado em blocos ```python e explicações detalhadas)\n\n"
-                        "## 🚀 3. Casos de Uso Reais\n(exemplos de aplicação no mercado)\n\n"
-                        "## 🛠️ 4. Exercício Prático de Fixação\n(desafio para o aluno resolver)\n\n"
-                        "ATENÇÃO CRÍTICA: O campo 'conteudo' DEVE ser uma string gigantesca e detalhada em Markdown puro. NUNCA devolvas objetos JSON ou dicionários no conteúdo. "
-                        "Responde estritamente em formato JSON puro com as chaves: 'titulo' (string) e 'conteudo' (string gigante em Markdown). "
-                        "Não incluas blocos ```json extras."
-                    )
-                },
-                {
-                    "role": "user", 
-                    "content": f"Cria o manual completo e estruturado para o módulo: '{research_text}'."
-                }
-            ]
-            raw_ai_response = call_groq(content_messages, '{"titulo": "Manual Prático", "conteudo": "## 🎯 O que vais aprender...\\n\\nConteúdo em expansão..."}')
-            
-            try:
-                if "```json" in raw_ai_response:
-                    raw_ai_response = raw_ai_response.split("```json")[1].split("```")[0].strip()
-                elif "```" in raw_ai_response:
-                    raw_ai_response = raw_ai_response.split("```")[1].split("```")[0].strip()
+            if acao == "DESIGN_PORTAL":
+                print("🎨 [DESIGN AGENT] A ler e a polir o design de portal.html...")
+                filename = "portal.html"
+                if os.path.exists(filename):
+                    with open(filename, "r", encoding="utf-8") as f:
+                        current_html = f.read()
+
+                    design_messages = [
+                        {
+                            "role": "system",
+                            "content": (
+                                "És um UI/UX Designer Sénior especializado em Tailwind CSS e interfaces modernas (Dark mode elegante, cartões glassmorphism, tipografia limpa). "
+                                "Receberás o código HTML atual do portal de membros. O teu trabalho é melhorá-lo significativamente, mantendo intactas as funções de JavaScript, APIs e renderização de Markdown (marked.js). "
+                                "Devolve APENAS o código HTML completo e atualizado, sem texto explicativo adicional."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Aqui está o código atual:\n\n{current_html[:12000]}"
+                        }
+                    ]
+                    
+                    new_html = call_groq(design_messages, current_html)
+                    if "<html" in new_html.lower() or "<div" in new_html.lower():
+                        with open(filename, "w", encoding="utf-8") as f:
+                            f.write(new_html)
+                        log_event("Design Agent", "UI Autonóma", "O Agente de Design reestruturou com sucesso o portal.html.")
+                        print("✅ portal.html otimizado autonomamente!")
+
+            else:
+                print("📚 [CONTENT AGENT] A compilar módulo técnico limpo e estruturado...")
+
+                content_messages = [
+                    {
+                        "role": "system", 
+                        "content": (
+                            "És um Engenheiro de Software Sênior e Autor de Manuais de Referência. "
+                            "Gera um módulo pedagógico avançado em formato JSON estrito. "
+                            "REGRAS CRÍTICAS:\n"
+                            "1. NÃO incluas introduções conversacionais (como 'Aqui está o teu e-book...').\n"
+                            "2. A chave 'titulo' DEVE conter apenas o nome técnico limpo do módulo, sem asteriscos ou aspas.\n"
+                            "3. A chave 'conteudo' DEVE ser uma string em Markdown limpa estruturada obrigatoriamente com:\n"
+                            "## 🎯 O que vais aprender\n"
+                            "## 🧰 Ferramentas e Requisitos\n"
+                            "## 📖 Fundamentos Teóricos\n"
+                            "## 💻 Implementação Prática Passo a Passo (com código completo em blocos ```python)\n"
+                            "## 🚀 Casos de Uso Reais\n"
+                            "## 🛠️ Exercício de Fixação\n"
+                            "Responde APENAS com o JSON puro, sem blocos ```json extras."
+                        )
+                    },
+                    {
+                        "role": "user", 
+                        "content": "Cria um módulo prático sobre Desenvolvimento de Microsserviços e Webhooks Assíncronos em Python."
+                    }
+                ]
                 
-                parsed_data = json.loads(raw_ai_response)
-                final_titulo = parsed_data.get("titulo", f"Módulo Prático: {research_text}")
-                final_conteudo = parsed_data.get("conteudo", "Conteúdo em atualização...")
+                raw_ai_response = call_groq(content_messages, '{"titulo": "Microsserviços em Python", "conteudo": "## 🎯 O que vais aprender\\nArquitetura assíncrona."}')
                 
-                if isinstance(final_conteudo, dict):
-                    final_conteudo = "\n\n".join([f"## {k}\n{v}" for k, v in final_conteudo.items()])
-                elif isinstance(final_conteudo, list):
-                    final_conteudo = "\n\n".join([str(i) for i in final_conteudo])
-                elif not isinstance(final_conteudo, str):
-                    final_conteudo = str(final_conteudo)
+                try:
+                    if "```json" in raw_ai_response:
+                        raw_ai_response = raw_ai_response.split("```json")[1].split("```")[0].strip()
+                    elif "```" in raw_ai_response:
+                        raw_ai_response = raw_ai_response.split("```")[1].split("```")[0].strip()
+                    
+                    parsed_data = json.loads(raw_ai_response)
+                    final_titulo = str(parsed_data.get("titulo", "Manual Técnico Avançado")).replace('**', '').replace('"', '')
+                    final_conteudo = str(parsed_data.get("conteudo", "Conteúdo em atualização..."))
+                except Exception as e:
+                    print("Erro no parse JSON do e-book:", e)
+                    final_titulo = "Engenharia de Sistemas Autónomos com Python"
+                    final_conteudo = "## 🎯 O que vais aprender\nDomínio de arquiteturas em Python.\n\n## 💻 Implementação Prática\n```python\nprint('Engine Ativa')\n```"
 
-            except Exception as e:
-                print("Erro no parse do e-book estruturado:", e)
-                final_titulo = f"Manual Completo: {research_text}"
-                final_conteudo = "## 🎯 O que vais aprender neste módulo\nNeste capítulo aprofundado, vais dominar os conceitos chave...\n\n## 🧰 Ferramentas e Requisitos\n- Python 3.x\n- Biblioteca Groq / OpenAI\n\n## 💻 Implementação Prática\n```python\nprint('Módulo estruturado carregado')\n```"
+                DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
+                content_item = {
+                    "id": f"content_{int(time.time() * 1000)}",
+                    "hora": datetime.now().strftime("%H:%M:%S"),
+                    "agente": "Content Agent (Piloto Automático)",
+                    "tipo": "Manual Técnico Estruturado",
+                    "titulo": final_titulo,
+                    "conteudo": final_conteudo,
+                    "created_at": datetime.now().isoformat()
+                }
+                
+                DB.setdefault("content_db", []).insert(0, content_item)
+                DB["content_db"] = DB["content_db"][:200]
+                log_event("Content Agent", "Novo Módulo Publicado", f"Módulo estipulado: {final_titulo}")
+                print(f"✅ Módulo limpo publicado: {final_titulo}")
 
-            DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
-            content_item = {
-                "id": f"content_{int(time.time() * 1000)}",
-                "hora": datetime.now().strftime("%H:%M:%S"),
-                "agente": "Content Agent (E-book Engine)",
-                "tipo": "Manual / E-book Técnico",
-                "titulo": final_titulo,
-                "conteudo": final_conteudo,
-                "created_at": datetime.now().isoformat()
-            }
-            
-            DB.setdefault("content_db", []).insert(0, content_item)
-            DB["content_db"] = DB["content_db"][:200]
-            log_event("Content Agent", "Portal Atualizado", f"Módulo estruturado publicado: {final_titulo}")
             guardar_db()
 
         except Exception as e:
-            print("Erro no ciclo autónomo de e-books estruturados:", e)
+            print("❌ Erro crítico no ciclo autónomo:", e)
+            time.sleep(30)
 
 
 threading.Thread(target=run_autonomous_agents, daemon=True).start()
@@ -361,7 +384,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             response_data["memoria_temas"] = DB.get("memoria_temas", [])
             self._send_json(response_data)
         elif self.path == '/meta.json':
-            self._send_json({"name": "Cyber Office", "version": "4.1", "status": "online"})
+            self._send_json({"name": "Cyber Office", "version": "4.3", "status": "online"})
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
