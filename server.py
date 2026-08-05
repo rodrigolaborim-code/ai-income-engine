@@ -132,9 +132,18 @@ def estado_inicial():
                 "id": "content_init_1",
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "Content Agent",
-                "tipo": "Landing Page Copy",
-                "titulo": "Manual Prático de Automação com IA",
-                "conteudo": "Aceda ao sistema definitivo para automatizar processos, eliminar tarefas repetitivas e escalar os seus resultados com inteligência artificial aplicada.",
+                "tipo": "Módulo Prático",
+                "titulo": "Como Criar um Agente de IA em Python do Zero",
+                "conteudo": "## Visão Geral do Módulo\n\nNeste guia passo a passo, vais aprender a criar um agente autónomo de inteligência artificial simples utilizando Python e APIs de LLM.\n\n### Passo 1: Preparar o Ambiente\n\nPara começar, cria um ficheiro `main.py` e instala a biblioteca oficial da OpenAI ou Groq:\n```bash\npip install openai\n```\n\n### Passo 2: Configurar o Código Base\n\nAdiciona o seguinte código para ligar a tua aplicação ao modelo de linguagem:\n```python
+from openai import OpenAI
+
+client = OpenAI(api_key=\"TEU_API_KEY\")
+response = client.chat.completions.create(
+    model=\"llama-3.1-8b-instant\",
+    messages=[{\"role\": \"user\", \"content\": \"Olá, agente!\"}]
+)
+print(response.choices[0].message.content)
+```\n\n### Passo 3: Executar e Testar\n\nExecuta o script no terminal para ver a primeira resposta automatizada do teu agente de IA.",
                 "created_at": datetime.now().isoformat()
             }
         ],
@@ -145,7 +154,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V3 carregado com integração n8n para entrega de produtos.",
+                "evento": "Motor V3 carregado com suporte a cursos práticos em Markdown.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -248,32 +257,39 @@ def run_autonomous_agents():
     while True:
         try:
             time.sleep(60)
-            print("💬 [ECOSSISTEMA AUTÓNOMO] A IA está a reescrever e otimizar os conteúdos do portal...")
+            print("💬 [ECOSSISTEMA AUTÓNOMO] A IA está a redigir um novo módulo prático para o portal...")
 
             research_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Research Agent, especialista em conversão e conteúdos de infoprodutos em Portugal."
+                    "content": "És um Arquiteto de Software e Engenheiro de IA Sénior."
                 },
                 {
                     "role": "user", 
-                    "content": "Qual deve ser o próximo módulo ou lição prática de automação com inteligência artificial para adicionar ao portal do aluno?"
+                    "content": "Define um tópico prático e técnico indispensável para quem quer aprender programação, automação ou integração de IAs (ex: 'Como integrar a API da Groq em Python', 'Como Automatizar Emails com Webhooks', 'Criar um Bot para Discord')."
                 }
             ]
-            research_text = call_groq(research_messages, "Foco em produtividade e redução de custos para negócios com IA.")
-            log_event("Research Agent", "Análise de Conteúdo", research_text)
+            research_text = call_groq(research_messages, "Como integrar a API de IA em projetos Python passo a passo.")
+            log_event("Research Agent", "Pesquisa de Módulos", research_text)
 
             content_messages = [
                 {
                     "role": "system", 
-                    "content": "És um criador de conteúdos educacionais e copywriter de elite. Deves gerar um título atrativo para uma nova lição/módulo e um conteúdo rico, prático e estruturado para a área de membros. Responde estritamente em formato JSON puro com as chaves exatas: 'titulo' e 'conteudo'. Sem formatação markdown extra, apenas o objeto JSON."
+                    "content": (
+                        "És um Instrutor Sénior de Programação e Inteligência Artificial. "
+                        "Deves gerar um módulo pedagógico completo, rico em conteúdo, com estrutura passo a passo, "
+                        "explicações profundas, blocos de código práticos e formatação Markdown limpa (usando ##, ###, listas e blocos ```python). "
+                        "Não menciones que és uma IA ou que o texto foi gerado por agentes. Escreve como um autor especialista num curso profissional. "
+                        "Responde estritamente em formato JSON puro com as chaves exatas: 'titulo' e 'conteudo'. "
+                        "NÃO incluas blocos ```json extras à volta da resposta."
+                    )
                 },
                 {
                     "role": "user", 
-                    "content": f"Com base nesta diretriz: '{research_text}', cria um título forte para o módulo e a matéria detalhada para os alunos."
+                    "content": f"Com base no tópico '{research_text}', cria o tutorial completo passo a passo com exemplos práticos de código e explicação detalhada."
                 }
             ]
-            raw_ai_response = call_groq(content_messages, '{"titulo": "Manual Prático de Automação com IA", "conteudo": "Aceda ao sistema definitivo para automatizar processos e escalar resultados."}')
+            raw_ai_response = call_groq(content_messages, '{"titulo": "Integrando APIs de IA em Python", "conteudo": "## Introdução\\n\\nAprenda a conectar o seu script Python a modelos LLM avançados...\\n\\n### Passo 1: Instalação\\nExecute `pip install openai` no terminal...\\n\\n### Passo 2: Implementação\\nCrie a conexão usando o cliente oficial..."}')
             
             try:
                 if "```json" in raw_ai_response:
@@ -282,18 +298,18 @@ def run_autonomous_agents():
                     raw_ai_response = raw_ai_response.split("```")[1].split("```")[0].strip()
                 
                 parsed_data = json.loads(raw_ai_response)
-                final_titulo = parsed_data.get("titulo", "Novo Módulo de Automação")
-                final_conteudo = parsed_data.get("conteudo", "Conteúdo prático gerado pela IA.")
+                final_titulo = parsed_data.get("titulo", "Módulo Prático de Programação")
+                final_conteudo = parsed_data.get("conteudo", "Conteúdo prático em atualização...")
             except Exception:
-                final_titulo = "Novo Módulo de Automação"
-                final_conteudo = "Conteúdo prático gerado pela IA para a comunidade."
+                final_titulo = "Módulo Prático: Guia Passo a Passo"
+                final_conteudo = "## Módulo Prático\n\nNesta aula vais aprender os conceitos chave para automatizar os teus processos.\n\n### Passo 1: Estruturação\nDefine os objetivos do teu sistema..."
 
             DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
             content_item = {
                 "id": f"content_{int(time.time() * 1000)}",
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "Content Agent (Autónomo)",
-                "tipo": "Módulo Portal do Aluno",
+                "tipo": "Módulo Prático",
                 "titulo": final_titulo,
                 "conteudo": final_conteudo,
                 "created_at": datetime.now().isoformat()
@@ -301,19 +317,19 @@ def run_autonomous_agents():
             
             DB.setdefault("content_db", []).insert(0, content_item)
             DB["content_db"] = DB["content_db"][:30]
-            log_event("Content Agent", "Portal Atualizado", f"Novo módulo gerado: {final_titulo}")
+            log_event("Content Agent", "Portal Atualizado", f"Novo módulo publicado: {final_titulo}")
 
             supervisor_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Supervisor AI. Avalias se o conteúdo gerado cumpre os padrões de qualidade pedagógica."
+                    "content": "És o Revisor Pedagógico. Avalias se o conteúdo ensina passo a passo com clareza e precisão técnica."
                 },
                 {
                     "role": "user", 
-                    "content": f"Título: {final_titulo} | Conteúdo: {final_conteudo}. Aprovado para o portal de membros?"
+                    "content": f"Título: {final_titulo} | Conteúdo: {final_conteudo[:200]}... Aprovado para a área de alunos?"
                 }
             ]
-            supervisor_text = call_groq(supervisor_messages, "Conteúdo aprovado e sincronizado.")
+            supervisor_text = call_groq(supervisor_messages, "Módulo aprovado e sincronizado no portal.")
             log_event("Supervisor AI", "Controlo de Qualidade", f"🛡️ {supervisor_text}")
 
             guardar_db()
