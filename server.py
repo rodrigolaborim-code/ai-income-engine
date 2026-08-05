@@ -10,6 +10,7 @@ from datetime import datetime
 print("--- DIAGNÓSTICO DE ARRANQUE ---")
 print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
 print("ENV GROQ_API_KEY presente?:", bool(os.environ.get("GROQ_API_KEY")))
+print("ENV N8N_PURCHASE_WEBHOOK_URL presente?:", bool(os.environ.get("N8N_PURCHASE_WEBHOOK_URL")))
 
 # Importações de bibliotecas externas com tratamento de segurança
 try:
@@ -52,6 +53,7 @@ DB_FILE = "database.json"
 MONGO_URI = os.environ.get("MONGO_URI")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 N8N_LEAD_WEBHOOK_URL = os.environ.get("N8N_LEAD_WEBHOOK_URL")
+N8N_PURCHASE_WEBHOOK_URL = os.environ.get("N8N_PURCHASE_WEBHOOK_URL")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 # Configurar o cliente Groq (Open-Source via Llama 3.1)
@@ -143,7 +145,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V3 carregado com controlo autónomo estruturado da landing page.",
+                "evento": "Motor V3 carregado com integração n8n para entrega de produtos.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -386,6 +388,22 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 DB["orders_db"].append({"email": email, "amount": amount_total, "timestamp": datetime.now().isoformat()})
                 guardar_db()
                 
+                # Disparar webhook para o n8n enviar o e-mail de entrega ao cliente
+                if N8N_PURCHASE_WEBHOOK_URL:
+                    try:
+                        import urllib.request
+                        current_product = DB.get("content_db", [{}])[0].get("titulo", "Manual Prático de Automação com IA")
+                        req_data = json.dumps({
+                            "email": email,
+                            "amount": amount_total,
+                            "produto": current_product,
+                            "data": datetime.now().isoformat()
+                        }).encode('utf-8')
+                        req = urllib.request.Request(N8N_PURCHASE_WEBHOOK_URL, data=req_data, headers={'Content-Type': 'application/json'})
+                        urllib.request.urlopen(req, timeout=5)
+                    except Exception as e:
+                        print(f"Erro ao disparar webhook de compra para o n8n: {e}")
+
                 log_event("Sales Agent", "Pagamento Stripe", f"COMPRA REAL: +€{amount_total:.2f} ({email})", is_test=False)
                 self._send_json({"received": True})
             else:
@@ -471,6 +489,23 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 DB["metrics"]["receita"] += amount
                 DB["orders_db"].append({"email": email, "amount": amount, "timestamp": datetime.now().isoformat()})
                 guardar_db()
+
+                # Disparar webhook para o n8n mesmo nas simulações/compras manuais se configurado
+                if N8N_PURCHASE_WEBHOOK_URL:
+                    try:
+                        import urllib.request
+                        current_product = DB.get("content_db", [{}])[0].get("titulo", "Manual Prático de Automação com IA")
+                        req_data = json.dumps({
+                            "email": email,
+                            "amount": amount,
+                            "produto": current_product,
+                            "data": datetime.now().isoformat()
+                        }).encode('utf-8')
+                        req = urllib.request.Request(N8N_PURCHASE_WEBHOOK_URL, data=req_data, headers={'Content-Type': 'application/json'})
+                        urllib.request.urlopen(req, timeout=5)
+                    except Exception as e:
+                        print(f"Erro ao disparar webhook de compra para o n8n: {e}")
+
                 log_event("Sales Agent", "Processar Pagamento", f"COMPRA REAL: +€{amount:.2f} ({email})", is_test=False)
 
             self._send_json({"ok": True, "message": f"Venda {'[TESTE]' if is_test else '[REAL]'} de €{amount:.2f} processada!"})
