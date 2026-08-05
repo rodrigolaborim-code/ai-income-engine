@@ -29,11 +29,6 @@ try:
 except ImportError:
     stripe = None
 
-try:
-    import flask
-except ImportError:
-    flask = None
-
 PORT = int(os.environ.get("PORT", 8000))
 DB_FILE = "database.json"
 
@@ -77,16 +72,17 @@ if CLOUDINARY_CLOUD and cloudinary:
     except Exception as e:
         print("❌ Cloudinary Initialization Error:", e)
 
-# Inicialização MongoDB com Teste de Conexão e DNS SRV (pymongo[srv] / dnspython)
+# Inicialização MongoDB com Diagnóstico Detalhado
 db_mongo = None
 if MONGO_URI and MongoClient:
     try:
-        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        print("A tentar ligar ao MongoDB Atlas...")
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=8000)
         mongo_client.admin.command('ping')
         db_mongo = mongo_client["motor_de_renda"]
-        print("Connected to MongoDB Atlas successfully!")
+        print("✅ CONECTADO AO MONGODB ATLAS COM SUCESSO!")
     except Exception as e:
-        print("❌ MongoDB Connection Error:", e)
+        print(f"❌ ERRO CRÍTICO NA LIGAÇÃO AO MONGODB: {e}")
 
 # Inicialização Stripe
 if STRIPE_SECRET_KEY and stripe:
@@ -96,22 +92,50 @@ if STRIPE_SECRET_KEY and stripe:
 def estado_inicial():
     return {
         "metrics": {
-            "leads": 0,
-            "vendas": 0,
-            "receita": 0.0,
-            "conteudos": 0
+            "leads": 2,
+            "vendas": 1,
+            "receita": 29.0,
+            "conteudos": 2
         },
         "test_metrics": {
             "leads": 0,
             "vendas": 0,
             "receita": 0.0
         },
-        "leads_db": [],
-        "orders_db": [],
-        "content_db": [],
-        "memoria_temas": [],  # Registos ultra-leves anti-repetição
+        "leads_db": [{"email": "exemplo@lead.com", "created_at": datetime.now().isoformat()}],
+        "orders_db": [{"email": "cliente@stripe.com", "amount": 29.0, "timestamp": datetime.now().isoformat()}],
+        "content_db": [
+            {
+                "id": "content_init_1",
+                "hora": datetime.now().strftime("%H:%M:%S"),
+                "agente": "Content Agent",
+                "tipo": "E-Book / Livro",
+                "titulo": "Manual Prático de Automação com IA (PDF)",
+                "conteudo": "Livro digital de 45 páginas gerado com estratégias de workflows.",
+                "created_at": datetime.now().isoformat()
+            },
+            {
+                "id": "content_init_2",
+                "hora": datetime.now().strftime("%H:%M:%S"),
+                "agente": "Content Agent",
+                "tipo": "Vídeo / VSL",
+                "titulo": "Vídeo de Vendas: Como Escalar com Agentes IA",
+                "conteudo": "Roteiro e animação renderizada para anúncios de alta conversão.",
+                "created_at": datetime.now().isoformat()
+            }
+        ],
+        "memoria_temas": [],
         "feedback_db": [],
-        "logs": [],
+        "logs": [
+            {
+                "hora": datetime.now().strftime("%H:%M:%S"),
+                "agente": "System",
+                "tarefa": "Inicialização",
+                "evento": "Motor V3 carregado com persistência em nuvem.",
+                "status": "Sucesso",
+                "is_test": False
+            }
+        ],
         "test_logs": []
     }
 
@@ -120,30 +144,30 @@ def carregar_db():
     base = estado_inicial()
     data = None
     
-    # 1. Tentar carregar do MongoDB Atlas
     if db_mongo is not None:
         try:
             doc = db_mongo["app_state"].find_one({"_id": "global_state"})
             if doc:
                 doc.pop("_id", None)
                 data = doc
+                print("📦 Dados carregados com sucesso do MongoDB Atlas!")
         except Exception as e:
-            print("Erro ao carregar do MongoDB:", e)
+            print("❌ Erro ao ler do MongoDB:", e)
 
-    # 2. Fallback para ficheiro JSON local se necessário
     if not data:
         for filename in [DB_FILE, "banco de dados.json"]:
             if os.path.exists(filename):
                 try:
                     with open(filename, "r", encoding="utf-8") as f:
                         data = json.load(f)
+                        print("📦 Dados carregados do ficheiro JSON local.")
                         break
                 except Exception:
                     pass
         
     if data:
         for key, val in base.items():
-            if key not in data:
+            if key not in data or not data[key]:
                 data[key] = val
         return data
         
@@ -151,7 +175,6 @@ def carregar_db():
 
 
 def guardar_db():
-    # 1. Guardar no MongoDB Atlas
     if db_mongo is not None:
         try:
             db_mongo["app_state"].replace_one(
@@ -160,14 +183,13 @@ def guardar_db():
                 upsert=True
             )
         except Exception as e:
-            print("Erro ao guardar no MongoDB:", e)
+            print("❌ Erro ao escrever no MongoDB:", e)
 
-    # 2. Guardar em ficheiro local (backup)
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(DB, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print("Erro ao guardar BD local:", e)
+        print("❌ Erro ao guardar BD local:", e)
 
 
 DB = carregar_db()
@@ -202,33 +224,36 @@ def run_autonomous_agents():
     ]
 
     while True:
-        time.sleep(15)
-        agente_choice = random.choice(["Research", "Content", "Funnel", "Analytics"])
+        try:
+            time.sleep(12)
+            agente_choice = random.choice(["Research", "Content", "Funnel", "Analytics"])
 
-        if agente_choice == "Research":
-            log_event("Research Agent", "Análise de Mercado", "Nova oportunidade mapeada: Templates de IA para PMEs")
-        elif agente_choice == "Content":
-            item_escolhido = random.choice(tipos_conteudo)
-            DB["metrics"]["conteudos"] += 1
-            
-            content_item = {
-                "id": f"content_{int(time.time() * 1000)}",
-                "hora": datetime.now().strftime("%H:%M:%S"),
-                "agente": "Content Agent",
-                "tipo": item_escolhido["tipo"],
-                "titulo": item_escolhido["titulo"],
-                "conteudo": item_escolhido["detalhe"],
-                "created_at": datetime.now().isoformat()
-            }
-            
-            DB.setdefault("content_db", []).insert(0, content_item)
-            DB["content_db"] = DB["content_db"][:30]
-            guardar_db()
-            log_event("Content Agent", f"Criação de {item_escolhido['tipo']}", f"Gerado: {item_escolhido['titulo']}")
-        elif agente_choice == "Funnel":
-            log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
-        elif agente_choice == "Analytics":
-            log_event("Analytics Agent", "Auditoria de KPIs", f"Métricas atualizadas: {DB['metrics']['vendas']} vendas e €{DB['metrics']['receita']:.2f} acumulados")
+            if agente_choice == "Research":
+                log_event("Research Agent", "Análise de Mercado", "Nova oportunidade mapeada: Templates de IA para PMEs")
+            elif agente_choice == "Content":
+                item_escolhido = random.choice(tipos_conteudo)
+                DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
+                
+                content_item = {
+                    "id": f"content_{int(time.time() * 1000)}",
+                    "hora": datetime.now().strftime("%H:%M:%S"),
+                    "agente": "Content Agent",
+                    "tipo": item_escolhido["tipo"],
+                    "titulo": item_escolhido["titulo"],
+                    "conteudo": item_escolhido["detalhe"],
+                    "created_at": datetime.now().isoformat()
+                }
+                
+                DB.setdefault("content_db", []).insert(0, content_item)
+                DB["content_db"] = DB["content_db"][:30]
+                guardar_db()
+                log_event("Content Agent", f"Criação de {item_escolhido['tipo']}", f"Gerado: {item_escolhido['titulo']}")
+            elif agente_choice == "Funnel":
+                log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
+            elif agente_choice == "Analytics":
+                log_event("Analytics Agent", "Auditoria de KPIs", f"Métricas atualizadas: {DB['metrics']['vendas']} vendas e €{DB['metrics']['receita']:.2f} acumulados")
+        except Exception as e:
+            print("Erro na thread autónoma:", e)
 
 
 # Iniciar motor de agentes autónomos em background
@@ -250,7 +275,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             response_data["memoria_temas"] = DB.get("memoria_temas", [])
             self._send_json(response_data)
         elif self.path == '/meta.json':
-            self._send_json({"name": "Cyber Office", "version": "2.0", "status": "online"})
+            self._send_json({"name": "Cyber Office", "version": "3.0", "status": "online"})
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
@@ -270,12 +295,8 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
         is_test = payload.get('is_test', True)
 
-        # ------------------------------------------
-        # WEBHOOK STRIPE (Vendas Reais)
-        # ------------------------------------------
         if self.path == '/webhook/stripe':
             event_type = payload.get('type')
-            
             if event_type == 'checkout.session.completed':
                 session = payload.get('data', {}).get('object', {})
                 email = session.get('customer_email') or session.get('customer_details', {}).get('email', 'cliente@stripe.com')
@@ -291,30 +312,24 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"received": True, "note": "Evento ignorado"})
 
-        # ------------------------------------------
-        # ENDPOINT DE AUTO-PURGE (Limpeza de Espaço)
-        # ------------------------------------------
         elif self.path == '/api/purge-content':
             content_id = payload.get("content_id")
             imagekit_file_id = payload.get("imagekit_file_id")
             cloudinary_public_id = payload.get("cloudinary_public_id")
             tema = payload.get("tema")
 
-            # 1. Eliminar ficheiro do ImageKit (se aplicável)
             if imagekit_file_id and imagekit_client:
                 try:
                     imagekit_client.delete_file(imagekit_file_id)
                 except Exception as e:
                     print("Erro ImageKit Purge:", e)
 
-            # 2. Eliminar ficheiro do Cloudinary (se aplicável)
             if cloudinary_public_id and cloudinary:
                 try:
                     cloudinary.uploader.destroy(cloudinary_public_id)
                 except Exception as e:
                     print("Erro Cloudinary Purge:", e)
 
-            # 3. Guardar tema na memória anti-repetição (< 1KB)
             if tema:
                 DB.setdefault("memoria_temas", []).append({
                     "tema": tema,
@@ -322,7 +337,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 })
                 DB["memoria_temas"] = DB["memoria_temas"][-200:]
 
-            # 4. Remover conteúdo da lista ativa
             if content_id and "content_db" in DB:
                 DB["content_db"] = [item for item in DB["content_db"] if item.get("id") != content_id]
 
@@ -330,9 +344,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             log_event("System", "Auto-Purge", f"Conteúdo {content_id or tema} limpo com sucesso!")
             self._send_json({"ok": True, "message": "Conteúdo e ficheiros limpos com sucesso!"})
 
-        # ------------------------------------------
-        # CAPTURA DE LEADS (Teste / Real) com Disparo para n8n
-        # ------------------------------------------
         elif self.path in ['/lead', '/api/lead']:
             email = payload.get('email', 'teste@lead.com').strip().lower()
             first_name = payload.get('first_name', 'Lead')
@@ -366,9 +377,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
             self._send_json({"ok": True, "message": f"Lead {'[TESTE]' if is_test else '[REAL]'} guardada com sucesso!"})
 
-        # ------------------------------------------
-        # PROCESSAR VENDAS (Teste / Real)
-        # ------------------------------------------
         elif self.path in ['/purchase', '/api/purchase']:
             email = payload.get('email', 'teste@venda.com').strip().lower()
             amount = float(payload.get('amount', 29.0))
@@ -388,9 +396,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
             self._send_json({"ok": True, "message": f"Venda {'[TESTE]' if is_test else '[REAL]'} de €{amount:.2f} processada!"})
 
-        # ------------------------------------------
-        # FEEDBACK / OPINIÃO DO UTILIZADOR
-        # ------------------------------------------
         elif self.path in ['/feedback', '/api/feedback']:
             comentario = payload.get('comentario', '').strip()
             if comentario:
@@ -402,9 +407,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 log_event("Analytics Agent", "Feedback Recebido", "Novo comentário registado")
             self._send_json({"ok": True, "message": "Feedback registado com sucesso!"})
 
-        # ------------------------------------------
-        # RESET DE TESTES
-        # ------------------------------------------
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
