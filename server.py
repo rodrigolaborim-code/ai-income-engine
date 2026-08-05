@@ -45,18 +45,10 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 N8N_LEAD_WEBHOOK_URL = os.environ.get("N8N_LEAD_WEBHOOK_URL")
 
 # ImageKit Config
-IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY")
-IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY")
-IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT")
-
 imagekit_client = None
-if IMAGEKIT_PRIVATE_KEY and IMAGEKIT_PUBLIC_KEY and IMAGEKIT_URL_ENDPOINT and ImageKit:
+if ImageKit:
     try:
-        imagekit_client = ImageKit(
-            public_key=IMAGEKIT_PUBLIC_KEY,
-            private_key=IMAGEKIT_PRIVATE_KEY,
-            url_endpoint=IMAGEKIT_URL_ENDPOINT
-        )
+        imagekit_client = ImageKit()
         print("Connected to ImageKit successfully!")
     except Exception as e:
         print("❌ ImageKit Initialization Error:", e)
