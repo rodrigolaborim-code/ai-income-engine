@@ -341,7 +341,6 @@
     const game = new Phaser.Game(config);
     let agents = [];
 
-    // Layout em Grelha 3x3 de Salas ligadas por Corredores Cibernéticos
     const rooms = [
       { id: "RESEARCH", name: "RESEARCH LAB", x: 30, y: 30, w: 170, h: 170, color: 0x00f0ff },
       { id: "CONTENT", name: "CONTENT STUDIO", x: 235, y: 30, w: 170, h: 170, color: 0x00ff66 },
@@ -378,16 +377,13 @@
       const scene = this;
       const g = scene.add.graphics();
 
-      // Desenhar Corredores / Conexões entre as salas da Grelha
       g.lineStyle(4, 0x1f2335, 1);
-      // Linhas Horizontais de corredores
       g.lineBetween(200, 115, 235, 115);
       g.lineBetween(405, 115, 440, 115);
       g.lineBetween(200, 320, 235, 320);
       g.lineBetween(405, 320, 440, 320);
       g.lineBetween(200, 525, 235, 525);
       g.lineBetween(405, 525, 440, 525);
-      // Linhas Verticais de corredores
       g.lineBetween(115, 200, 115, 235);
       g.lineBetween(320, 200, 320, 235);
       g.lineBetween(525, 200, 525, 235);
@@ -395,14 +391,12 @@
       g.lineBetween(320, 405, 320, 440);
       g.lineBetween(525, 405, 525, 440);
 
-      // Desenhar as Salas da Base HQ
       rooms.forEach(r => {
         g.fillStyle(0x0c0f1d, 1);
         g.fillRect(r.x, r.y, r.w, r.h);
         g.lineStyle(2, r.color, 0.8);
         g.strokeRect(r.x, r.y, r.w, r.h);
 
-        // Detalhe interior cyberpunk simulado com linhas subtis
         g.lineStyle(1, r.color, 0.15);
         for(let py = r.y + 20; py < r.y + r.h - 10; py += 15) {
           g.lineBetween(r.x + 10, py, r.x + r.w - 10, py);
@@ -415,7 +409,6 @@
         });
       });
 
-      // Posicionar Agentes Autónomos nas respetivas salas iniciais
       agentData.forEach((data, index) => {
         const textureKey = `agent_pixel_${index}`;
         generatePixelSprite(scene, textureKey, "#fca5a5", `#${data.shirtColor.toString(16).padStart(6, '0')}`);
