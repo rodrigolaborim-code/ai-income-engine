@@ -248,29 +248,29 @@ def run_autonomous_agents():
     while True:
         try:
             time.sleep(60)
-            print("💬 [ECOSSISTEMA AUTÓNOMO] A IA está a reescrever e otimizar os textos da página...")
+            print("💬 [ECOSSISTEMA AUTÓNOMO] A IA está a reescrever e otimizar os conteúdos do portal...")
 
             research_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Research Agent, especialista em conversão e tendências de infoprodutos em Portugal."
+                    "content": "És o Research Agent, especialista em conversão e conteúdos de infoprodutos em Portugal."
                 },
                 {
                     "role": "user", 
-                    "content": "Qual deve ser o foco comercial atual para atrair clientes interessados em automação com inteligência artificial?"
+                    "content": "Qual deve ser o próximo módulo ou lição prática de automação com inteligência artificial para adicionar ao portal do aluno?"
                 }
             ]
             research_text = call_groq(research_messages, "Foco em produtividade e redução de custos para negócios com IA.")
-            log_event("Research Agent", "Análise de Mercado", research_text)
+            log_event("Research Agent", "Análise de Conteúdo", research_text)
 
             content_messages = [
                 {
                     "role": "system", 
-                    "content": "És um copywriter profissional de elite. Deves gerar um título principal atrativo e um subtítulo/descrição persuasivos para uma página de vendas de infoproduto. Responde estritamente em formato JSON puro com as chaves exatas: 'titulo' e 'conteudo'. Sem formatação markdown extra, apenas o objeto JSON."
+                    "content": "És um criador de conteúdos educacionais e copywriter de elite. Deves gerar um título atrativo para uma nova lição/módulo e um conteúdo rico, prático e estruturado para a área de membros. Responde estritamente em formato JSON puro com as chaves exatas: 'titulo' e 'conteudo'. Sem formatação markdown extra, apenas o objeto JSON."
                 },
                 {
                     "role": "user", 
-                    "content": f"Com base nesta diretriz: '{research_text}', cria um título forte e comercial e uma descrição rica que convença o visitante a comprar o manual de automação."
+                    "content": f"Com base nesta diretriz: '{research_text}', cria um título forte para o módulo e a matéria detalhada para os alunos."
                 }
             ]
             raw_ai_response = call_groq(content_messages, '{"titulo": "Manual Prático de Automação com IA", "conteudo": "Aceda ao sistema definitivo para automatizar processos e escalar resultados."}')
@@ -282,18 +282,18 @@ def run_autonomous_agents():
                     raw_ai_response = raw_ai_response.split("```")[1].split("```")[0].strip()
                 
                 parsed_data = json.loads(raw_ai_response)
-                final_titulo = parsed_data.get("titulo", "Manual Prático de Automação com IA")
-                final_conteudo = parsed_data.get("conteudo", "Aceda ao sistema definitivo.")
+                final_titulo = parsed_data.get("titulo", "Novo Módulo de Automação")
+                final_conteudo = parsed_data.get("conteudo", "Conteúdo prático gerado pela IA.")
             except Exception:
-                final_titulo = "Manual Prático de Automação com IA"
-                final_conteudo = "Aceda ao sistema definitivo para automatizar processos, eliminar tarefas repetitivas e escalar os seus resultados."
+                final_titulo = "Novo Módulo de Automação"
+                final_conteudo = "Conteúdo prático gerado pela IA para a comunidade."
 
             DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
             content_item = {
                 "id": f"content_{int(time.time() * 1000)}",
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "Content Agent (Autónomo)",
-                "tipo": "Otimização de Landing Page",
+                "tipo": "Módulo Portal do Aluno",
                 "titulo": final_titulo,
                 "conteudo": final_conteudo,
                 "created_at": datetime.now().isoformat()
@@ -301,19 +301,19 @@ def run_autonomous_agents():
             
             DB.setdefault("content_db", []).insert(0, content_item)
             DB["content_db"] = DB["content_db"][:30]
-            log_event("Content Agent", "Atualização da Página", f"Novo copy gerado e aplicado ao site: {final_titulo}")
+            log_event("Content Agent", "Portal Atualizado", f"Novo módulo gerado: {final_titulo}")
 
             supervisor_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Supervisor AI. Avalias se o texto gerado cumpre os padrões de qualidade e conversão sem parecer spam."
+                    "content": "És o Supervisor AI. Avalias se o conteúdo gerado cumpre os padrões de qualidade pedagógica."
                 },
                 {
                     "role": "user", 
-                    "content": f"Título: {final_titulo} | Descrição: {final_conteudo}. Aprovado para exibição pública?"
+                    "content": f"Título: {final_titulo} | Conteúdo: {final_conteudo}. Aprovado para o portal de membros?"
                 }
             ]
-            supervisor_text = call_groq(supervisor_messages, "Copy aprovado e sincronizado com sucesso.")
+            supervisor_text = call_groq(supervisor_messages, "Conteúdo aprovado e sincronizado.")
             log_event("Supervisor AI", "Controlo de Qualidade", f"🛡️ {supervisor_text}")
 
             guardar_db()
@@ -340,6 +340,10 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         
         elif self.path in ['/dashboard', '/admin', '/index.html']:
             self.path = '/index.html'
+            return super().do_GET()
+
+        elif self.path in ['/portal', '/membros', '/portal.html']:
+            self.path = '/portal.html'
             return super().do_GET()
 
         elif self.path == '/api/data':
@@ -482,7 +486,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 guardar_db()
                 log_event("Sales Agent", "Processar Pagamento", f"COMPRA REAL: +€{amount:.2f} ({email})", is_test=False)
 
-            # DISPARO PARA O N8N CORRETAMENTE FORA DO IF/ELSE
             if N8N_PURCHASE_WEBHOOK_URL:
                 try:
                     import urllib.request
