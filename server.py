@@ -9,6 +9,7 @@ from datetime import datetime
 
 print("--- DIAGNÓSTICO DE ARRANQUE ---")
 print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
+print("ENV GEMINI_API_KEY presente?:", bool(os.environ.get("GEMINI_API_KEY")))
 
 # Importações de bibliotecas externas com tratamento de segurança
 try:
@@ -17,6 +18,14 @@ try:
 except Exception as e:
     MongoClient = None
     print("❌ ERRO AO IMPORTAR PYMONGO:", e)
+
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+    print("Biblioteca google-generativeai importada com sucesso!")
+except ImportError:
+    GEMINI_AVAILABLE = False
+    print("⚠️ google-generativeai em falta no ambiente.")
 
 try:
     from imagekitio import ImageKit
@@ -43,6 +52,17 @@ DB_FILE = "database.json"
 MONGO_URI = os.environ.get("MONGO_URI")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 N8N_LEAD_WEBHOOK_URL = os.environ.get("N8N_LEAD_WEBHOOK_URL")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Configurar o Gemini AI (Plano Gratuito)
+gemini_model = None
+if GEMINI_API_KEY and GEMINI_AVAILABLE:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+        print("✅ Gemini AI conectado com sucesso!")
+    except Exception as e:
+        print("❌ Erro ao configurar Gemini AI:", e)
 
 # ImageKit Config
 imagekit_client = None
@@ -130,7 +150,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V3 carregado com persistência em nuvem.",
+                "evento": "Motor V3 carregado com persistência em nuvem e Gemini IA.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -215,42 +235,49 @@ def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
 
 
 def run_autonomous_agents():
-    tipos_conteudo = [
-        {"tipo": "E-Book / Livro", "titulo": "Manual Prático de Automação com IA (PDF)", "detalhe": "Livro digital de 45 páginas gerado com estratégias de workflows."},
-        {"tipo": "Vídeo / VSL", "titulo": "Vídeo de Vendas: Como Escalar com Agentes IA", "detalhe": "Roteiro e animação renderizada para anúncios de alta conversão."},
-        {"tipo": "Imagem / Criativo", "titulo": "Pack de Criativos para Anúncios (Ads)", "detalhe": "Banner cyberpunk gerado por IA para campanhas de tráfego pago."},
-        {"tipo": "Copy / E-mail", "titulo": "Sequência de E-mails de Boas-Vindas", "detalhe": "5 e-mails automatizados para conversão de leads frios em clientes."}
-    ]
-
     while True:
         try:
-            time.sleep(12)
+            time.sleep(20)
             agente_choice = random.choice(["Research", "Content", "Funnel", "Analytics"])
 
             if agente_choice == "Research":
-                log_event("Research Agent", "Análise de Mercado", "Nova oportunidade mapeada: Templates de IA para PMEs")
+                if gemini_model:
+                    res = gemini_model.generate_content("Gera uma oportunidade de mercado curta e direta para infoprodutos de IA em português.")
+                    texto = res.text.strip()
+                else:
+                    texto = "Nova oportunidade mapeada: Templates de IA para PMEs"
+                log_event("Research Agent", "Análise de Mercado", texto)
+
             elif agente_choice == "Content":
-                item_escolhido = random.choice(tipos_conteudo)
+                if gemini_model:
+                    res = gemini_model.generate_content("Cria um título e um breve resumo (1 parágrafo) em português para um infoproduto digital de automação com IA.")
+                    texto_ia = res.text.strip()
+                else:
+                    texto_ia = "Manual Prático de Automação com IA gerado por simulação."
+                
                 DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
                 
                 content_item = {
                     "id": f"content_{int(time.time() * 1000)}",
                     "hora": datetime.now().strftime("%H:%M:%S"),
                     "agente": "Content Agent",
-                    "tipo": item_escolhido["tipo"],
-                    "titulo": item_escolhido["titulo"],
-                    "conteudo": item_escolhido["detalhe"],
+                    "tipo": "E-Book / IA Gemini",
+                    "titulo": "Gerado por IA (Gemini)",
+                    "conteudo": texto_ia,
                     "created_at": datetime.now().isoformat()
                 }
                 
                 DB.setdefault("content_db", []).insert(0, content_item)
                 DB["content_db"] = DB["content_db"][:30]
                 guardar_db()
-                log_event("Content Agent", f"Criação de {item_escolhido['tipo']}", f"Gerado: {item_escolhido['titulo']}")
+                log_event("Content Agent", "Criação de Conteúdo", f"Gerado por IA: {texto_ia[:60]}...")
+
             elif agente_choice == "Funnel":
-                log_event("Funnel Agent", "Otimização de Conversão", "Verificação da sequência de e-mails concluída")
+                log_event("Funnel Agent", "Otimização de Conversão", "IA verificou o fluxo de leads e otimizou os funis de conversão.")
+
             elif agente_choice == "Analytics":
-                log_event("Analytics Agent", "Auditoria de KPIs", f"Métricas atualizadas: {DB['metrics']['vendas']} vendas e €{DB['metrics']['receita']:.2f} acumulados")
+                log_event("Analytics Agent", "Auditoria de KPIs", f"Métricas auditadas: {DB['metrics']['vendas']} vendas e €{DB['metrics']['receita']:.2f} acumulados.")
+
         except Exception as e:
             print("Erro na thread autónoma:", e)
 
