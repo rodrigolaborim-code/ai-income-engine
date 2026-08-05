@@ -5,9 +5,10 @@ import os
 import time
 import threading
 import random
+import re
 from datetime import datetime
 
-print("--- DIAGNÓSTICO DE ARRANQUE V9.0 (SISTEMA COMPLETO DE 3 IAS + COMANDOS DIRETOS) ---")
+print("--- DIAGNÓSTICO DE ARRANQUE V9.1 (SISTEMA COMPLETO + PARSER RESILIENTE) ---")
 print("ENV MONGO_URI presente?:", bool(os.environ.get("MONGO_URI")))
 print("ENV GROQ_API_KEY presente?:", bool(os.environ.get("GROQ_API_KEY")))
 print("ENV N8N_PURCHASE_WEBHOOK_URL presente?:", bool(os.environ.get("N8N_PURCHASE_WEBHOOK_URL")))
@@ -150,7 +151,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V9.0 carregado com 3 IAs independentes e comandos diretos.",
+                "evento": "Motor V9.1 carregado com parser JSON resiliente e 3 IAs.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -213,6 +214,12 @@ def guardar_db():
 
 DB = carregar_db()
 
+# Limpeza automática de registos corrompidos com literais \n no início
+for item in DB.get("content_db", []):
+    if "conteudo" in item and "\\n" in item["conteudo"] and "\n" not in item["conteudo"]:
+        item["conteudo"] = item["conteudo"].replace("\\n", "\n")
+guardar_db()
+
 
 def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
     log_entry = {
@@ -248,6 +255,31 @@ def call_groq(messages_list, fallback_text):
     except Exception as e:
         print("Erro na chamada à Groq:", e)
         return fallback_text
+
+
+def parse_ai_json(raw_text):
+    """Parser robusto para limpar e processar JSON retornado por LLMs."""
+    if not raw_text:
+        return None
+    
+    if "```json" in raw_text:
+        parts = raw_text.split("```json")
+        if len(parts) > 1:
+            raw_text = parts[1].split("```")[0].strip()
+    elif "```" in raw_text:
+        parts = raw_text.split("```")
+        if len(parts) > 1:
+            raw_text = parts[1].split("```")[0].strip()
+            
+    try:
+        return json.loads(raw_text)
+    except Exception:
+        try:
+            fixed = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', raw_text)
+            return json.loads(fixed)
+        except Exception as e:
+            print("❌ Falha crítica no parse JSON da IA:", e)
+            return None
 
 
 # ==========================================
@@ -313,18 +345,11 @@ def ebook_synthesis_loop():
             ]
 
             raw = call_groq(prompt, "")
-            if not raw:
-                continue
-
-            try:
-                if "```json" in raw:
-                    raw = raw.split("```json")[1].split("```")[0].strip()
-                elif "```" in raw:
-                    raw = raw.split("```")[1].split("```")[0].strip()
-                
-                parsed = json.loads(raw)
-                titulo = str(parsed.get("titulo", f"E-book Técnico: {tema_alvo}")).replace('*', '').replace('"', '')
-                conteudo = str(parsed.get("conteudo", ""))
+            parsed = parse_ai_json(raw)
+            
+            if parsed and isinstance(parsed, dict):
+                titulo = str(parsed.get("titulo", f"E-book Técnico: {tema_alvo}")).replace('*', '').replace('"', '').strip()
+                conteudo = str(parsed.get("conteudo", "")).strip()
 
                 if len(conteudo) > 400 and "```python" in conteudo:
                     num_ebook = len(DB.get("content_db", [])) + 1
@@ -347,10 +372,9 @@ def ebook_synthesis_loop():
                     log_event("Ebook Synthesis AI", "Compilação de E-book", f"E-book publicado no portal: {titulo_final}")
                     print(f"✅ E-book gerado com sucesso: {titulo_final}")
                 else:
-                    print("⚠️ E-book rejeitado por falta de profundidade.")
-
-            except Exception as parse_err:
-                print("❌ Erro ao processar JSON do E-book:", parse_err)
+                    print("⚠️ E-book rejeitado por falta de profundidade ou código Python.")
+            else:
+                print("⚠️ Falha ao descodificar JSON do E-book gerado pela IA.")
 
         except Exception as e:
             print("❌ Erro na Ebook Synthesis AI:", e)
@@ -435,7 +459,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             response_data["memoria_temas"] = DB.get("memoria_temas", [])
             self._send_json(response_data)
         elif self.path == '/meta.json':
-            self._send_json({"name": "Cyber Office", "version": "9.0", "status": "online"})
+            self._send_json({"name": "Cyber Office", "version": "9.1", "status": "online"})
         elif self.path == '/api/reset-tests':
             DB["test_metrics"] = {"leads": 0, "vendas": 0, "receita": 0.0}
             DB["test_logs"] = []
@@ -479,9 +503,8 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"ok": False, "reason": "O conteúdo HTML fornecido está vazio."})
 
-        # Endpoint para ordenar tarefas específicas a cada uma das 3 IAs a partir do dashboard
         elif self.path == '/api/command-ai':
-            ai_target = payload.get('ai_target', '').strip().lower()  # 'master', 'ebook', 'landing'
+            ai_target = payload.get('ai_target', '').strip().lower()
             command_text = payload.get('command', '').strip()
             if ai_target in DB["ai_commands"] and command_text:
                 DB["ai_commands"][ai_target] = command_text
