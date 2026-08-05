@@ -3,54 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Área de Membros | Automação com IA</title>
+    <title>Academia de Automação & IA | Portal do Aluno</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluído para processar textos ricos e códigos formatados em Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-30 px-6 py-4">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold text-emerald-400">⚡ Portal do Aluno</h1>
-            <span class="text-sm text-slate-400" id="status-ai">IA Atualizada em Tempo Real</span>
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">⚡</span>
+                <h1 class="text-lg font-bold tracking-tight text-white">Academia IA & Automação</h1>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 mr-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                Área de Alunos Ativa
+            </span>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto p-6 space-y-8">
-        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
-            <h2 id="main-title" class="text-3xl font-extrabold mb-4 text-white">A carregar conteúdo principal...</h2>
-            <p id="main-content" class="text-slate-300 leading-relaxed text-lg"></p>
-        </section>
-
-        <section>
-            <h3 class="text-xl font-bold mb-4 text-white">Módulos e Recursos Recentes</h3>
-            <div id="modules-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Os módulos gerados pela IA entram aqui dinamicamente -->
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto p-6 md:p-10">
+        
+        <!-- VISTA DE LISTA (Módulos e Cursos Disponíveis) -->
+        <div id="listView">
+            <div class="mb-8">
+                <h2 class="text-3xl font-extrabold text-white tracking-tight">Trilho de Cursos & Módulos</h2>
+                <p class="text-slate-400 mt-2">Clica em qualquer módulo para aceder ao conteúdo passo a passo, explicações aprofundadas e exemplos práticos.</p>
             </div>
-        </section>
+
+            <!-- Grelha Dinâmica de Módulos -->
+            <div id="modules-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Os módulos criados pelas IAs aparecem aqui automaticamente -->
+            </div>
+        </div>
+
+        <!-- VISTA DE LEITURA DO CURSO/AULA (Oculta por defeito, abre ao clicar) -->
+        <div id="readerView" class="hidden">
+            <button onclick="backToList()" class="mb-6 inline-flex items-center text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer">
+                ← Voltar à Lista de Módulos
+            </button>
+            <article class="bg-slate-900/90 border border-slate-800 rounded-2xl p-8 md:p-12 shadow-2xl">
+                <div class="flex items-center space-x-3 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3">
+                    <span id="reader-badge">Módulo Prático</span>
+                    <span>•</span>
+                    <span id="reader-time"></span>
+                </div>
+                <h2 id="reader-title" class="text-3xl md:text-4xl font-extrabold text-white mb-6 leading-tight"></h2>
+                
+                <!-- O conteúdo gerado pelas IAs formatado automaticamente como uma aula estruturada -->
+                <div id="reader-content" class="text-slate-300 leading-relaxed space-y-4 text-base md:text-lg">
+                </div>
+            </article>
+        </div>
+
     </main>
 
     <script>
+        let allModules = [];
+
         async function loadPortalData() {
             try {
                 const res = await fetch('/api/data');
                 const data = await res.json();
                 
                 if (data.contents && data.contents.length > 0) {
-                    // O item mais recente da IA vira o destaque principal
-                    const latest = data.contents[0];
-                    document.getElementById('main-title').innerText = latest.titulo;
-                    document.getElementById('main-content').innerText = latest.conteudo;
-
-                    // O resto dos itens formam os módulos
+                    allModules = data.contents;
                     const grid = document.getElementById('modules-grid');
                     grid.innerHTML = '';
                     
-                    data.contents.forEach((item, index) => {
+                    allModules.forEach((item, index) => {
+                        // Limpa tags markdown para criar uma introdução limpa no cartão
+                        const cleanSnippet = item.conteudo.replace(/#{1,6}\s?/g, '').substring(0, 130) + '...';
+                        
                         grid.innerHTML += `
-                            <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-6 hover:border-slate-700 transition">
-                                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Módulo 0${index + 1}</span>
-                                <h4 class="text-lg font-bold mt-2 mb-2 text-white">${item.titulo}</h4>
-                                <p class="text-slate-400 text-sm line-clamp-3">${item.conteudo}</p>
-                                <div class="mt-4 text-xs text-slate-500">Gerado às ${item.hora || 'Agora'}</div>
+                            <div onclick="openModule('${item.id}')" class="group bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 hover:border-emerald-500/50 hover:bg-slate-900 transition cursor-pointer flex flex-col justify-between shadow-lg">
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Módulo 0${index + 1}</span>
+                                        <span class="text-xs text-slate-500">${item.hora || 'Hoje'}</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white group-hover:text-emerald-400 transition mb-2">${item.titulo}</h3>
+                                    <p class="text-slate-400 text-sm leading-relaxed">${cleanSnippet}</p>
+                                </div>
+                                <div class="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-emerald-400">
+                                    <span>Aceder à Aula Passo a Passo →</span>
+                                </div>
                             </div>
                         `;
                     });
@@ -59,8 +98,32 @@
                 console.error("Erro ao carregar dados do portal:", e);
             }
         }
+
+        function openModule(id) {
+            const mod = allModules.find(m => m.id === id);
+            if (!mod) return;
+
+            document.getElementById('reader-title').innerText = mod.titulo;
+            document.getElementById('reader-badge').innerText = mod.tipo || 'Módulo Prático';
+            document.getElementById('reader-time').innerText = `Atualizado às ${mod.hora || 'Hoje'}`;
+            
+            // Converte todo o conteúdo Markdown gerado pelas IAs em HTML legível e bonito
+            document.getElementById('reader-content').innerHTML = marked.parse(mod.conteudo);
+
+            // Alterna a vista da página
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('readerView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToList() {
+            document.getElementById('readerView').classList.add('hidden');
+            document.getElementById('listView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         loadPortalData();
-        setInterval(loadPortalData, 30000); // Atualiza sozinho a cada 30 segundos
+        setInterval(loadPortalData, 30000); // Atualiza os módulos automaticamente a cada 30 segundos
     </script>
 </body>
 </html>
