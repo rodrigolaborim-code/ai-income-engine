@@ -87,16 +87,16 @@
 
     .main-workspace {
       display: grid;
-      grid-template-columns: 620px 1fr;
+      grid-template-columns: 640px 1fr;
       gap: 16px;
       margin-bottom: 20px;
     }
 
     .game-wrapper {
-      background: #000000;
+      background: #020205;
       border: 2px solid var(--accent-green);
       border-radius: 6px;
-      height: 580px;
+      height: 640px;
       overflow: hidden;
       box-shadow: 0 0 20px rgba(0, 255, 102, 0.1);
     }
@@ -110,7 +110,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      height: 580px;
+      height: 640px;
     }
 
     .sandbox-title {
@@ -331,9 +331,9 @@
     const config = {
       type: Phaser.AUTO,
       parent: 'phaser-game',
-      width: 620,
-      height: 580,
-      backgroundColor: '#050508',
+      width: 640,
+      height: 640,
+      backgroundColor: '#020205',
       physics: { default: 'arcade' },
       scene: { preload: function(){}, create: create, update: update }
     };
@@ -341,13 +341,17 @@
     const game = new Phaser.Game(config);
     let agents = [];
 
+    // Layout em Grelha 3x3 de Salas ligadas por Corredores Cibernéticos
     const rooms = [
-      { id: "RESEARCH", name: "RESEARCH LAB", x: 15, y: 20, w: 180, h: 240, color: 0x00f0ff },
-      { id: "CONTENT", name: "CONTENT STUDIO", x: 220, y: 20, w: 180, h: 240, color: 0x00ff66 },
-      { id: "FUNNEL", name: "FUNNEL ROOM", x: 425, y: 20, w: 180, h: 240, color: 0xff0077 },
-      { id: "SALES", name: "SALES DESK", x: 15, y: 300, w: 180, h: 240, color: 0xffaa00 },
-      { id: "DELIVERY", name: "DELIVERY VAULT", x: 220, y: 300, w: 180, h: 240, color: 0xa855f7 },
-      { id: "ANALYTICS", name: "WAR ROOM", x: 425, y: 300, w: 180, h: 240, color: 0x3b82f6 }
+      { id: "RESEARCH", name: "RESEARCH LAB", x: 30, y: 30, w: 170, h: 170, color: 0x00f0ff },
+      { id: "CONTENT", name: "CONTENT STUDIO", x: 235, y: 30, w: 170, h: 170, color: 0x00ff66 },
+      { id: "FUNNEL", name: "FUNNEL ROOM", x: 440, y: 30, w: 170, h: 170, color: 0xff0077 },
+      { id: "SALES", name: "SALES DESK", x: 30, y: 235, w: 170, h: 170, color: 0xffaa00 },
+      { id: "STRATEGY", name: "COMMAND HQ", x: 235, y: 235, w: 170, h: 170, color: 0x3b82f6 },
+      { id: "DELIVERY", name: "DELIVERY VAULT", x: 440, y: 235, w: 170, h: 170, color: 0xa855f7 },
+      { id: "ARCHIVE", name: "DATA ARCHIVE", x: 30, y: 440, w: 170, h: 170, color: 0x10b981 },
+      { id: "SECURITY", name: "SEC OPS", x: 235, y: 440, w: 170, h: 170, color: 0x6366f1 },
+      { id: "ANALYTICS", name: "WAR ROOM", x: 440, y: 440, w: 170, h: 170, color: 0xf59e0b }
     ];
 
     const agentData = [
@@ -355,7 +359,6 @@
       { name: "Content", shirtColor: 0x00cd66, defaultTask: "Gerar Copy" },
       { name: "Funnel", shirtColor: 0xd10060, defaultTask: "Ajustar VSL" },
       { name: "Sales", shirtColor: 0xe69900, defaultTask: "Fechar Leads" },
-      { name: "Delivery", shirtColor: 0x8b5cf6, defaultTask: "Enviar Acessos" },
       { name: "Analytics", shirtColor: 0x2563eb, defaultTask: "Otimizar ROI" }
     ];
 
@@ -375,24 +378,49 @@
       const scene = this;
       const g = scene.add.graphics();
 
+      // Desenhar Corredores / Conexões entre as salas da Grelha
+      g.lineStyle(4, 0x1f2335, 1);
+      // Linhas Horizontais de corredores
+      g.lineBetween(200, 115, 235, 115);
+      g.lineBetween(405, 115, 440, 115);
+      g.lineBetween(200, 320, 235, 320);
+      g.lineBetween(405, 320, 440, 320);
+      g.lineBetween(200, 525, 235, 525);
+      g.lineBetween(405, 525, 440, 525);
+      // Linhas Verticais de corredores
+      g.lineBetween(115, 200, 115, 235);
+      g.lineBetween(320, 200, 320, 235);
+      g.lineBetween(525, 200, 525, 235);
+      g.lineBetween(115, 405, 115, 440);
+      g.lineBetween(320, 405, 320, 440);
+      g.lineBetween(525, 405, 525, 440);
+
+      // Desenhar as Salas da Base HQ
       rooms.forEach(r => {
         g.fillStyle(0x0c0f1d, 1);
         g.fillRect(r.x, r.y, r.w, r.h);
         g.lineStyle(2, r.color, 0.8);
         g.strokeRect(r.x, r.y, r.w, r.h);
 
+        // Detalhe interior cyberpunk simulado com linhas subtis
+        g.lineStyle(1, r.color, 0.15);
+        for(let py = r.y + 20; py < r.y + r.h - 10; py += 15) {
+          g.lineBetween(r.x + 10, py, r.x + r.w - 10, py);
+        }
+
         scene.add.text(r.x + 8, r.y + 8, `[ ${r.name} ]`, {
-          font: '9px "JetBrains Mono"',
+          font: '8px "JetBrains Mono"',
           fill: '#ffffff',
           fontStyle: 'bold'
         });
       });
 
+      // Posicionar Agentes Autónomos nas respetivas salas iniciais
       agentData.forEach((data, index) => {
         const textureKey = `agent_pixel_${index}`;
         generatePixelSprite(scene, textureKey, "#fca5a5", `#${data.shirtColor.toString(16).padStart(6, '0')}`);
 
-        const room = rooms[index];
+        const room = rooms[index % rooms.length];
         const spawnX = room.x + (room.w / 2);
         const spawnY = room.y + (room.h / 2);
 
@@ -400,7 +428,7 @@
         const sprite = scene.add.sprite(0, 0, textureKey).setScale(1.4);
 
         const taskBubble = scene.add.text(0, -28, `⚙️ ${data.defaultTask}`, {
-          font: '8px "JetBrains Mono"',
+          font: '7px "JetBrains Mono"',
           fill: '#ffaa00',
           backgroundColor: '#0a0d14',
           padding: { x: 3, y: 1 }
@@ -411,15 +439,15 @@
         agents.push({
           name: data.name,
           container: container,
-          currentRoom: index,
-          targetRoom: index,
-          speed: 1.5,
+          currentRoom: index % rooms.length,
+          targetRoom: index % rooms.length,
+          speed: 1.2,
           isMoving: false
         });
       });
 
       scene.time.addEvent({
-        delay: 4000,
+        delay: 3500,
         callback: moveRandomAgent,
         loop: true
       });
@@ -446,7 +474,7 @@
           const dy = targetY - agent.container.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist > 4) {
+          if (dist > 3) {
             agent.container.x += (dx / dist) * agent.speed;
             agent.container.y += (dy / dist) * agent.speed;
           } else {
