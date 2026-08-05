@@ -25,7 +25,7 @@ except ImportError:
     stripe = None
 
 PORT = int(os.environ.get("PORT", 8000))
-DB_FILE = "banco de dados.json"
+DB_FILE = "database.json"
 
 # ==========================================
 # CONFIGURAÇÕES DE VARIÁVEIS DE AMBIENTE
@@ -36,15 +36,16 @@ CLOUDINARY_KEY = os.environ.get("CLOUDINARY_API_KEY")
 CLOUDINARY_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 
-# Inicialização MongoDB
+# Inicialização MongoDB com Teste de Conexão e DNS (dnspython)
 db_mongo = None
 if MONGO_URI and MongoClient:
     try:
-        mongo_client = MongoClient(MONGO_URI)
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        mongo_client.admin.command('ping')
         db_mongo = mongo_client["motor_de_renda"]
         print(" Connected to MongoDB Atlas successfully!")
     except Exception as e:
-        print(" MongoDB Connection Error:", e)
+        print("❌ MongoDB Connection Error:", e)
 
 # Inicialização Cloudinary
 if CLOUDINARY_CLOUD and cloudinary:
@@ -83,7 +84,7 @@ def estado_inicial():
 
 
 def carregar_db():
-    # 1. Tentar carregar do MongoDB (Evita perda de dados no Render)
+    # 1. Tentar carregar do MongoDB Atlas
     if db_mongo is not None:
         try:
             doc = db_mongo["app_state"].find_one({"_id": "global_state"})
@@ -93,19 +94,31 @@ def carregar_db():
         except Exception as e:
             print("Erro ao carregar do MongoDB:", e)
 
-    # 2. Fallback para ficheiro JSON local
-    if os.path.exists(DB_FILE):
-        try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+    # 2. Fallback para ficheiro JSON local se existir
+    for filename in [DB_FILE, "banco de dados.json"]:
+        if os.path.exists(filename):
+            try:
+                with open(filename, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    # Se encontrarmos dados locais e o MongoDB estiver ativo, sincroniza para a nuvem
+                    if db_mongo is not None and data:
+                        try:
+                            db_mongo["app_state"].replace_one(
+                                {"_id": "global_state"},
+                                data,
+                                upsert=True
+                            )
+                        except Exception:
+                            pass
+                    return data
+            except Exception:
+                pass
             
     return estado_inicial()
 
 
 def guardar_db():
-    # 1. Guardar no MongoDB
+    # 1. Guardar no MongoDB Atlas
     if db_mongo is not None:
         try:
             db_mongo["app_state"].replace_one(
@@ -116,7 +129,7 @@ def guardar_db():
         except Exception as e:
             print("Erro ao guardar no MongoDB:", e)
 
-    # 2. Guardar em ficheiro local
+    # 2. Guardar em ficheiro local (backup)
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(DB, f, ensure_ascii=False, indent=2)
