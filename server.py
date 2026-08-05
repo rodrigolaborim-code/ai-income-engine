@@ -7,17 +7,11 @@ import threading
 import random
 from datetime import datetime
 
-# Bibliotecas externas (Pymongo, Cloudinary, Stripe)
+# Bibliotecas externas (Pymongo, Stripe)
 try:
     from pymongo import MongoClient
 except ImportError:
     MongoClient = None
-
-try:
-    import cloudinary
-    import cloudinary.uploader
-except ImportError:
-    cloudinary = None
 
 try:
     import stripe
@@ -31,12 +25,15 @@ DB_FILE = "database.json"
 # CONFIGURAÇÕES DE VARIÁVEIS DE AMBIENTE
 # ==========================================
 MONGO_URI = os.environ.get("MONGO_URI")
-CLOUDINARY_CLOUD = os.environ.get("CLOUDINARY_CLOUD_NAME")
-CLOUDINARY_KEY = os.environ.get("CLOUDINARY_API_KEY")
-CLOUDINARY_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+N8N_LEAD_WEBHOOK_URL = os.environ.get("N8N_LEAD_WEBHOOK_URL")
 
-# Inicialização MongoDB com Teste de Conexão e DNS (dnspython)
+# ImageKit
+IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY")
+IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY")
+IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT")
+
+# Inicialização MongoDB com Teste de Conexão
 db_mongo = None
 if MONGO_URI and MongoClient:
     try:
@@ -46,14 +43,6 @@ if MONGO_URI and MongoClient:
         print(" Connected to MongoDB Atlas successfully!")
     except Exception as e:
         print("❌ MongoDB Connection Error:", e)
-
-# Inicialização Cloudinary
-if CLOUDINARY_CLOUD and cloudinary:
-    cloudinary.config(
-        cloud_name=CLOUDINARY_CLOUD,
-        api_key=CLOUDINARY_KEY,
-        api_secret=CLOUDINARY_SECRET
-    )
 
 # Inicialização Stripe
 if STRIPE_SECRET_KEY and stripe:
@@ -76,7 +65,7 @@ def estado_inicial():
         "leads_db": [],
         "orders_db": [],
         "content_db": [],
-        "memoria_temas": [],  # Registos ultra-leves para evitar repetição
+        "memoria_temas": [],
         "feedback_db": [],
         "logs": [],
         "test_logs": []
@@ -87,7 +76,6 @@ def carregar_db():
     base = estado_inicial()
     data = None
     
-    # 1. Tentar carregar do MongoDB Atlas
     if db_mongo is not None:
         try:
             doc = db_mongo["app_state"].find_one({"_id": "global_state"})
@@ -97,7 +85,6 @@ def carregar_db():
         except Exception as e:
             print("Erro ao carregar do MongoDB:", e)
 
-    # 2. Fallback para ficheiro JSON local se necessário
     if not data:
         for filename in [DB_FILE, "banco de dados.json"]:
             if os.path.exists(filename):
@@ -109,7 +96,6 @@ def carregar_db():
                     pass
         
     if data:
-        # Garantir que todas as chaves obrigatórias existem
         for key, val in base.items():
             if key not in data:
                 data[key] = val
@@ -119,7 +105,6 @@ def carregar_db():
 
 
 def guardar_db():
-    # 1. Guardar no MongoDB Atlas
     if db_mongo is not None:
         try:
             db_mongo["app_state"].replace_one(
@@ -130,7 +115,6 @@ def guardar_db():
         except Exception as e:
             print("Erro ao guardar no MongoDB:", e)
 
-    # 2. Guardar em ficheiro local (backup)
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(DB, f, ensure_ascii=False, indent=2)
@@ -263,17 +247,8 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         # ------------------------------------------
         elif self.path == '/api/purge-content':
             content_id = payload.get("content_id")
-            cloudinary_public_id = payload.get("cloudinary_public_id")
             tema = payload.get("tema")
 
-            # 1. Eliminar ficheiro do Cloudinary (se existir)
-            if cloudinary_public_id and cloudinary:
-                try:
-                    cloudinary.uploader.destroy(cloudinary_public_id)
-                except Exception as e:
-                    print("Erro Cloudinary Purge:", e)
-
-            # 2. Guardar o tema na memória leve anti-repetição (< 1KB)
             if tema:
                 DB.setdefault("memoria_temas", []).append({
                     "tema": tema,
@@ -281,7 +256,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 })
                 DB["memoria_temas"] = DB["memoria_temas"][-200:]
 
-            # 3. Remover o conteúdo pesado da lista ativa
             if content_id and "content_db" in DB:
                 DB["content_db"] = [item for item in DB["content_db"] if item.get("id") != content_id]
 
@@ -309,9 +283,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                 guardar_db()
                 log_event("Funnel Agent", "Captura de Lead", f"Novo Lead Registado: {email}", is_test=False)
 
-            # Disparo automático para o n8n via Webhook configurado nas variáveis do Render
-            n8n_url = os.environ.get("N8N_LEAD_WEBHOOK_URL")
-            if n8n_url:
+            if N8N_LEAD_WEBHOOK_URL:
                 try:
                     import urllib.request
                     req_data = json.dumps({
@@ -320,7 +292,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                         "source": source,
                         "consent": consent
                     }).encode('utf-8')
-                    req = urllib.request.Request(n8n_url, data=req_data, headers={'Content-Type': 'application/json'})
+                    req = urllib.request.Request(N8N_LEAD_WEBHOOK_URL, data=req_data, headers={'Content-Type': 'application/json'})
                     urllib.request.urlopen(req, timeout=5)
                 except Exception as e:
                     print(f"Erro ao disparar webhook para n8n: {e}")
