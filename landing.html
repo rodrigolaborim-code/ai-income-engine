@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Prático de Automação com IA | Ecossistema Autónomo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- HERO / PÁGINA DE VENDAS -->
+    <header class="max-w-4xl mx-auto px-6 py-20 text-center">
+        <span class="inline-block bg-emerald-500/10 text-emerald-400 text-xs font-semibold px-3 py-1 rounded-full mb-4 border border-emerald-500/20">
+            ⚡ Desenvolvido e Otimizado por Inteligência Artificial
+        </span>
+        <h1 id="product-title" class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+            Manual Prático de Automação com IA
+        </h1>
+        <p id="product-desc" class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10">
+            Aceda ao guia definitivo criado por agentes autónomos para escalar processos, criar fluxos e dominar a inteligência artificial aplicada aos negócios.
+        </p>
+
+        <!-- BOTÃO DE COMPRA STRIPE (29€ COM O TEU LINK REAL) -->
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <a href="https://buy.stripe.com/00w3cu92l1gP1QAcXu3ks00" target="_blank" 
+               class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-lg px-8 py-4 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 text-center">
+                Comprar Agora por 29,00 €
+            </a>
+        </div>
+        <p class="text-xs text-slate-500 mt-3">🔒 Pagamento 100% seguro processado via Stripe. Acesso imediato ao infoproduto.</p>
+    </header>
+
+    <!-- SECÇÃO DE BENEFÍCIOS -->
+    <main class="max-w-4xl mx-auto px-6 py-10 grid md:grid-cols-3 gap-6 mb-16">
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+            <div class="text-2xl mb-3">🤖</div>
+            <h3 class="font-bold text-lg mb-2">Estratégia Autónoma</h3>
+            <p class="text-sm text-slate-400">Conteúdos validados e adaptados por agentes especializados em tendências de mercado.</p>
+        </div>
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+            <div class="text-2xl mb-3">📈</div>
+            <h3 class="font-bold text-lg mb-2">Focado em Conversão</h3>
+            <p class="text-sm text-slate-400">Abordagens diretas e ganchos testados para maximizar os resultados práticos.</p>
+        </div>
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+            <div class="text-2xl mb-3">🚀</div>
+            <h3 class="font-bold text-lg mb-2">Atualização Contínua</h3>
+            <p class="text-sm text-slate-400">O ecossistema evolui dinamicamente para trazer sempre o material mais recente.</p>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
+        <p>&copy; 2026 Motor de Renda IA. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- SCRIPT DE ATUALIZAÇÃO AUTOMÁTICA PELAS IAS -->
+    <script>
+        async function loadAIContent() {
+            try {
+                const res = await fetch('/api/data');
+                const data = await res.json();
+                
+                if (data.contents && data.contents.length > 0) {
+                    const latest = data.contents[0];
+                    if (latest.titulo && latest.titulo.length > 5) {
+                        document.getElementById('product-title').innerText = latest.titulo;
+                    }
+                    if (latest.conteudo) {
+                        document.getElementById('product-desc').innerText = latest.conteudo;
+                    }
+                }
+            } catch (e) {
+                console.log("A carregar catálogo padrão.");
+            }
+        }
+        loadAIContent();
+    </script>
+</body>
+</html>
