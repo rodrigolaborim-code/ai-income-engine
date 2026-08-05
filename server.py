@@ -152,7 +152,7 @@ def estado_inicial():
                 "hora": datetime.now().strftime("%H:%M:%S"),
                 "agente": "System",
                 "tarefa": "Inicialização",
-                "evento": "Motor V3 carregado com ecossistema multi-agente especializado.",
+                "evento": "Motor V3 carregado com ecossistema colaborativo e co-criação de agentes.",
                 "status": "Sucesso",
                 "is_test": False
             }
@@ -254,102 +254,102 @@ def call_groq(messages_list, fallback_text):
 def run_autonomous_agents():
     while True:
         try:
-            time.sleep(45) # Intervalo calculado para processamento profundo dos agentes especializados
-            print("🧠 [ECOSSISTEMA MULTI-AGENTE] A iniciar ronda conjunta e especializada...")
+            time.sleep(50) # Intervalo calculado para o debate profundo e co-criação entre as IAs
+            print("💬 [ECOSSISTEMA COLABORATIVO] A iniciar ronda de debate e co-criação entre agentes...")
 
-            # Recolher memória recente para os agentes aprenderem com o passado
+            # Recolher memória recente para contexto e evolução contínua
             historico_recente = [item.get("conteudo", "") for item in DB.get("content_db", [])[:3]]
-            contexto_aprendizagem = " | ".join(historico_recente) if historico_recente else "Fase inicial de arranque do ecossistema."
+            contexto_aprendizagem = " | ".join(historico_recente) if historico_recente else "Fase inicial de arranque."
 
-            # 1. RESEARCH AGENT (O Estrategista de Mercado)
+            # 1. RESEARCH AGENT (Define a Estratégia de Mercado)
             research_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Research Agent, um analista de mercado implacável e especialista em tendências digitais. A tua função é estudar o histórico anterior, aprender com o passado e detetar uma nova oportunidade altamente lucrativa de infoprodutos de IA em português."
+                    "content": "És o Research Agent, especialista em tendências de mercado. Identifica uma oportunidade de infoproduto de IA em português."
                 },
                 {
                     "role": "user", 
-                    "content": f"Histórico de ativos anteriores para não repetires ideias: [{contexto_aprendizagem}]. Apresenta uma nova perspetiva de nicho ou oportunidade de mercado."
+                    "content": f"Histórico anterior para evitar repetições: [{contexto_aprendizagem}]. Qual deve ser a próxima grande oportunidade de mercado?"
                 }
             ]
-            research_text = call_groq(research_messages, "Oportunidade detetada: Dashboards de automação de IA para PMEs.")
-            log_event("Research Agent", "Análise e Aprendizagem", research_text)
+            research_text = call_groq(research_messages, "Oportunidade: Dashboards de automação de IA para PMEs.")
+            log_event("Research Agent", "Estratégia de Mercado", research_text)
 
-            # 2. CONTENT AGENT (O Copywriter de Elite)
+            # 2. CONTENT AGENT (Cria o Rascunho Inicial do Produto)
             content_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Content Agent, um copywriter de elite focado em conversão e criação de ativos digitais de alto valor (e-books, guias, scripts). Transformas dados de mercado em produtos vendáveis."
+                    "content": "És o Content Agent, focado na criação de ativos digitais de alto valor com base nas diretrizes do Research Agent."
                 },
                 {
                     "role": "user", 
-                    "content": f"Com base nesta diretriz do Research Agent: '{research_text}', cria um título comercial forte e um resumo detalhado (1 parágrafo) para o novo infoproduto digital."
+                    "content": f"Com base nesta tendência: '{research_text}', cria um título forte e um resumo detalhado para o infoproduto."
                 }
             ]
-            content_text = call_groq(content_messages, "Manual Prático de Otimização com Agentes IA.")
+            draft_content = call_groq(content_messages, "Manual Prático de Otimização com Agentes IA.")
+            log_event("Content Agent", "Criação de Rascunho", f"Draft inicial: {draft_content[:60]}...")
 
-            # Guardar o ativo gerado na BD (memória permanente de conteúdos)
+            # 3. FUNNEL AGENT CRITICA E SUGERE MELHORIAS (Interação Direta)
+            funnel_messages = [
+                {
+                    "role": "system", 
+                    "content": "És o Funnel Agent, especialista em conversão. Analisas o rascunho criado pelo Content Agent e dás feedback crítico direto: apontas falhas e sugeres melhorias na abordagem para vender melhor."
+                },
+                {
+                    "role": "user", 
+                    "content": f"Analisa este rascunho de produto: '{draft_content}'. O que deve ser melhorado para garantir que o cliente compra?"
+                }
+            ]
+            funnel_critique = call_groq(funnel_messages, "O rascunho é bom, mas falta focar mais nos benefícios práticos e urgência para o cliente final.")
+            log_event("Funnel Agent", "Crítica e Sugestão", f"Feedback para o Content Agent: {funnel_critique[:80]}...")
+
+            # 4. CONTENT AGENT MELHORA O PRODUTO COM BASE NA SUGESTÃO DO FUNNEL AGENT
+            refine_messages = [
+                {
+                    "role": "system", 
+                    "content": "És o Content Agent. Recebeste feedback crítico e sugestões de melhoria do Funnel Agent. Atualiza e refina o infoproduto incorporando essas sugestões para o tornar perfeito."
+                },
+                {
+                    "role": "user", 
+                    "content": f"Rascunho original: '{draft_content}'\n\nSugestões de melhoria do Funnel Agent: '{funnel_critique}'\n\nApresenta a versão final otimizada do infoproduto."
+                }
+            ]
+            final_content = call_groq(refine_messages, draft_content)
+
+            # Guardar o ativo final refinado na BD
             DB["metrics"]["conteudos"] = DB.get("metrics", {}).get("conteudos", 0) + 1
             content_item = {
                 "id": f"content_{int(time.time() * 1000)}",
                 "hora": datetime.now().strftime("%H:%M:%S"),
-                "agente": "Content Agent",
-                "tipo": "Ativo Especializado / Llama",
-                "titulo": "Produto Desenvolvido por IA Autónoma",
-                "conteudo": content_text,
+                "agente": "Content Agent (Colaborativo)",
+                "tipo": "Ativo Otimizado por Equipa IA",
+                "titulo": "Produto Co-Criado e Refinado",
+                "conteudo": final_content,
                 "created_at": datetime.now().isoformat()
             }
             
             DB.setdefault("content_db", []).insert(0, content_item)
             DB["content_db"] = DB["content_db"][:30]
-            log_event("Content Agent", "Criação de Ativo", f"Ativo gerado: {content_text[:60]}...")
+            log_event("Content Agent", "Ativo Final Co-Criado", f"Produto finalizado após debate: {final_content[:60]}...")
 
-            # 3. FUNNEL AGENT (O Especialista de Conversão)
-            funnel_messages = [
-                {
-                    "role": "system", 
-                    "content": "És o Funnel Agent, focado em otimizar a jornada do cliente e garantir que os leads fluem perfeitamente para a compra do infoproduto gerado."
-                },
-                {
-                    "role": "user", 
-                    "content": f"Analisa o novo ativo criado ('{content_text[:50]}...') e otimiza os pontos de contacto do funnel de vendas."
-                }
-            ]
-            funnel_text = call_groq(funnel_messages, "Funil otimizado para conversão direta do novo ativo.")
-            log_event("Funnel Agent", "Otimização de Funil", funnel_text)
-
-            # 4. ANALYTICS AGENT (O Cientista de Dados)
-            analytics_messages = [
-                {
-                    "role": "system", 
-                    "content": "És o Analytics Agent, responsável por auditar métricas, ROI e performance financeira do motor."
-                },
-                {
-                    "role": "user", 
-                    "content": f"Audita o estado atual: {DB['metrics']['vendas']} vendas e €{DB['metrics']['receita']:.2f} gerados. Dá um parecer analítico curto."
-                }
-            ]
-            analytics_text = call_groq(analytics_messages, f"Métricas auditadas: {DB['metrics']['vendas']} vendas registadas.")
-            log_event("Analytics Agent", "Auditoria de KPIs", analytics_text)
-
-            # 5. SUPERVISOR AI (O Diretor Geral)
+            # 5. SUPERVISOR AI (Audita todo o processo colaborativo)
             supervisor_messages = [
                 {
                     "role": "system", 
-                    "content": "És o Supervisor AI, a IA mestre que supervisiona todo o ecossistema. Avalias o trabalho conjunto de todos os agentes (Research, Content, Funnel, Analytics), validas se há consistência e dás a aprovação final do ciclo."
+                    "content": "És o Supervisor AI. Avalias o processo de co-criação onde o Funnel Agent deu feedback ao Content Agent. Validas se a solução final ficou robusta."
                 },
                 {
                     "role": "user", 
-                    "content": f"Faz uma supervisão implacável deste ciclo:\n- Research: {research_text[:100]}\n- Content: {content_text[:100]}\n- Funnel: {funnel_text[:100]}\n\nValida se o ecossistema está a trabalhar em sintonia perfeita numa única frase de controlo de qualidade."
+                    "content": f"Feedback dado: '{funnel_critique[:100]}' | Resultado final: '{final_content[:100]}'. O ciclo colaborativo funcionou bem? Dá um parecer final de controlo."
                 }
             ]
-            supervisor_text = call_groq(supervisor_messages, "Ciclo validado e alinhado com sucesso pela supervisão.")
-            log_event("Supervisor AI", "Controlo de Qualidade", f"🛡️ {supervisor_text}")
+            supervisor_text = call_groq(supervisor_messages, "Ciclo colaborativo validado com sucesso.")
+            log_event("Supervisor AI", "Auditoria de Co-Criação", f"🛡️ {supervisor_text}")
 
             guardar_db()
 
         except Exception as e:
-            print("Erro no ciclo multi-agente:", e)
+            print("Erro no ciclo colaborativo multi-agente:", e)
 
 
 # Iniciar motor de agentes autónomos em background
