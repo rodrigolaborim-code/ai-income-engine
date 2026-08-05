@@ -84,37 +84,38 @@ def estado_inicial():
 
 
 def carregar_db():
+    base = estado_inicial()
+    data = None
+    
     # 1. Tentar carregar do MongoDB Atlas
     if db_mongo is not None:
         try:
             doc = db_mongo["app_state"].find_one({"_id": "global_state"})
             if doc:
                 doc.pop("_id", None)
-                return doc
+                data = doc
         except Exception as e:
             print("Erro ao carregar do MongoDB:", e)
 
-    # 2. Fallback para ficheiro JSON local se existir
-    for filename in [DB_FILE, "banco de dados.json"]:
-        if os.path.exists(filename):
-            try:
-                with open(filename, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    # Se encontrarmos dados locais e o MongoDB estiver ativo, sincroniza para a nuvem
-                    if db_mongo is not None and data:
-                        try:
-                            db_mongo["app_state"].replace_one(
-                                {"_id": "global_state"},
-                                data,
-                                upsert=True
-                            )
-                        except Exception:
-                            pass
-                    return data
-            except Exception:
-                pass
-            
-    return estado_inicial()
+    # 2. Fallback para ficheiro JSON local se necessário
+    if not data:
+        for filename in [DB_FILE, "banco de dados.json"]:
+            if os.path.exists(filename):
+                try:
+                    with open(filename, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        break
+                except Exception:
+                    pass
+        
+    if data:
+        # Garantir que todas as chaves obrigatórias existem
+        for key, val in base.items():
+            if key not in data:
+                data[key] = val
+        return data
+        
+    return base
 
 
 def guardar_db():
@@ -151,10 +152,10 @@ def log_event(agente, tarefa, evento, status="Sucesso", is_test=False):
     }
     
     if is_test:
-        DB["test_logs"].insert(0, log_entry)
+        DB.setdefault("test_logs", []).insert(0, log_entry)
         DB["test_logs"] = DB["test_logs"][:15]
     else:
-        DB["logs"].insert(0, log_entry)
+        DB.setdefault("logs", []).insert(0, log_entry)
         DB["logs"] = DB["logs"][:20]
     
     guardar_db()
@@ -276,7 +277,6 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
                     "tema": tema,
                     "postado_em": datetime.now().isoformat()
                 })
-                # Manter apenas os últimos 200 temas
                 DB["memoria_temas"] = DB["memoria_temas"][-200:]
 
             # 3. Remover o conteúdo pesado da lista ativa
@@ -297,6 +297,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             consent = payload.get('consent', True)
 
             if is_test:
+                DB.setdefault("test_metrics", {"leads": 0, "vendas": 0, "receita": 0.0})
                 DB["test_metrics"]["leads"] += 1
                 guardar_db()
                 log_event("Funnel Agent", "Simulação Lead", f"TESTE: Lead registado ({email})", is_test=True)
@@ -332,6 +333,7 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             amount = float(payload.get('amount', 29.0))
 
             if is_test:
+                DB.setdefault("test_metrics", {"leads": 0, "vendas": 0, "receita": 0.0})
                 DB["test_metrics"]["vendas"] += 1
                 DB["test_metrics"]["receita"] += amount
                 guardar_db()
