@@ -3,78 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Prático de Automação com IA | Ecossistema Autónomo</title>
+    <title id="page-title">Manual Prático de Automação com IA | Ecossistema Exclusivo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
 
-    <!-- HERO / PÁGINA DE VENDAS -->
-    <header class="max-w-4xl mx-auto px-6 py-20 text-center">
-        <span class="inline-block bg-emerald-500/10 text-emerald-400 text-xs font-semibold px-3 py-1 rounded-full mb-4 border border-emerald-500/20">
-            ⚡ Desenvolvido e Otimizado por Inteligência Artificial
+    <!-- HERO SECTION (CONTROLADA TOTALMENTE PELAS IAS) -->
+    <header class="max-w-4xl mx-auto px-6 pt-24 pb-12 text-center">
+        <span class="inline-block bg-emerald-500/10 text-emerald-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 border border-emerald-500/20 tracking-wide uppercase">
+            ⚡ Lançamento Oficial • Edição Limitada
         </span>
-        <h1 id="product-title" class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+        
+        <h1 id="product-title" class="text-4xl md:text-6xl font-black tracking-tight mb-6 leading-tight text-white">
             Manual Prático de Automação com IA
         </h1>
-        <p id="product-desc" class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10">
-            Aceda ao guia definitivo criado por agentes autónomos para escalar processos, criar fluxos e dominar a inteligência artificial aplicada aos negócios.
+        
+        <p id="product-desc" class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Aceda ao sistema definitivo para automatizar processos, eliminar tarefas repetitivas e escalar os seus resultados com inteligência artificial aplicada.
         </p>
 
-        <!-- BOTÃO DE COMPRA STRIPE (29€ COM O TEU LINK REAL) -->
-        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <a href="https://buy.stripe.com/00w3cu92l1gP1QAcXu3ks00" target="_blank" 
-               class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-lg px-8 py-4 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 text-center">
-                Comprar Agora por 29,00 €
+        <!-- BOTÃO DE COMPRA STRIPE (SEGURO E FIXO) -->
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
+            <a id="stripe-btn" href="https://buy.stripe.com/00w3cu92l1gP1QAcXu3ks00" target="_blank" 
+               class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-lg px-10 py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-0.5 text-center tracking-wide">
+                Comprar Acesso Completo por 29,00 €
             </a>
         </div>
-        <p class="text-xs text-slate-500 mt-3">🔒 Pagamento 100% seguro processado via Stripe. Acesso imediato ao infoproduto.</p>
+        <p class="text-xs text-slate-500 mt-4">🔒 Pagamento processado de forma 100% segura pelo Stripe. Acesso imediato.</p>
     </header>
 
-    <!-- SECÇÃO DE BENEFÍCIOS -->
-    <main class="max-w-4xl mx-auto px-6 py-10 grid md:grid-cols-3 gap-6 mb-16">
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
-            <div class="text-2xl mb-3">🤖</div>
-            <h3 class="font-bold text-lg mb-2">Estratégia Autónoma</h3>
-            <p class="text-sm text-slate-400">Conteúdos validados e adaptados por agentes especializados em tendências de mercado.</p>
+    <!-- SECÇÃO DE BENEFÍCIOS DINÂMICOS (GERIDOS PELAS IAS) -->
+    <main class="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-6 mb-20">
+        <div class="bg-slate-900/60 p-8 rounded-2xl border border-slate-800/80 backdrop-blur-sm transition hover:border-emerald-500/30">
+            <div class="text-3xl mb-4">🚀</div>
+            <h3 id="b1-title" class="font-bold text-xl mb-3 text-white">Estratégia Comprovada</h3>
+            <p id="b1-desc" class="text-sm text-slate-400 leading-relaxed">Abordagens validadas e testadas para garantir retorno prático imediato sem complicações técnicas.</p>
         </div>
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
-            <div class="text-2xl mb-3">📈</div>
-            <h3 class="font-bold text-lg mb-2">Focado em Conversão</h3>
-            <p class="text-sm text-slate-400">Abordagens diretas e ganchos testados para maximizar os resultados práticos.</p>
+        <div class="bg-slate-900/60 p-8 rounded-2xl border border-slate-800/80 backdrop-blur-sm transition hover:border-emerald-500/30">
+            <div class="text-3xl mb-4">⚙️</div>
+            <h3 id="b2-title" class="font-bold text-xl mb-3 text-white">Workflows Prontos</h3>
+            <p id="b2-desc" class="text-sm text-slate-400 leading-relaxed">Estruturas desenhadas para executar em piloto automático e otimizar o seu tempo a 100%.</p>
         </div>
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
-            <div class="text-2xl mb-3">🚀</div>
-            <h3 class="font-bold text-lg mb-2">Atualização Contínua</h3>
-            <p class="text-sm text-slate-400">O ecossistema evolui dinamicamente para trazer sempre o material mais recente.</p>
+        <div class="bg-slate-900/60 p-8 rounded-2xl border border-slate-800/80 backdrop-blur-sm transition hover:border-emerald-500/30">
+            <div class="text-3xl mb-4">💡</div>
+            <h3 id="b3-title" class="font-bold text-xl mb-3 text-white">Escalabilidade Real</h3>
+            <p id="b3-desc" class="text-sm text-slate-400 leading-relaxed">Mentalidade e ferramentas focadas em transformar processos manuais em fontes de rendimento contínuas.</p>
         </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
+    <footer class="border-t border-slate-900/80 py-8 text-center text-xs text-slate-600">
         <p>&copy; 2026 Motor de Renda IA. Todos os direitos reservados.</p>
     </footer>
 
-    <!-- SCRIPT DE ATUALIZAÇÃO AUTOMÁTICA PELAS IAS -->
+    <!-- MOTOR DE SINCRONIZAÇÃO AUTÓNOMA -->
     <script>
-        async function loadAIContent() {
+        async function updateLandingPage() {
             try {
                 const res = await fetch('/api/data');
                 const data = await res.json();
                 
                 if (data.contents && data.contents.length > 0) {
                     const latest = data.contents[0];
+                    
+                    // Atualizar título se gerado
                     if (latest.titulo && latest.titulo.length > 5) {
                         document.getElementById('product-title').innerText = latest.titulo;
+                        document.getElementById('page-title').innerText = latest.titulo + " | Motor de Renda";
                     }
+                    
+                    // Atualizar descrição/subtítulo se gerado
                     if (latest.conteudo) {
-                        document.getElementById('product-desc').innerText = latest.conteudo;
+                        // Limpa marcadores indesejados caso existam
+                        let cleanText = latest.conteudo.replace(/[*#_]/g, '');
+                        if (cleanText.length > 20) {
+                            document.getElementById('product-desc').innerText = cleanText.substring(0, 220) + "...";
+                        }
                     }
                 }
             } catch (e) {
-                console.log("A carregar catálogo padrão.");
+                console.log("A manter layout padrão otimizado.");
             }
         }
-        loadAIContent();
+        updateLandingPage();
     </script>
 </body>
 </html>
