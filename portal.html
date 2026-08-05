@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área de Membros | Automação com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur p-6">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-emerald-400">⚡ Portal do Aluno</h1>
+            <span class="text-sm text-slate-400" id="status-ai">IA Atualizada em Tempo Real</span>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-6 space-y-8">
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
+            <h2 id="main-title" class="text-3xl font-extrabold mb-4 text-white">A carregar conteúdo principal...</h2>
+            <p id="main-content" class="text-slate-300 leading-relaxed text-lg"></p>
+        </section>
+
+        <section>
+            <h3 class="text-xl font-bold mb-4 text-white">Módulos e Recursos Recentes</h3>
+            <div id="modules-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Os módulos gerados pela IA entram aqui dinamicamente -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function loadPortalData() {
+            try {
+                const res = await fetch('/api/data');
+                const data = await res.json();
+                
+                if (data.contents && data.contents.length > 0) {
+                    // O item mais recente da IA vira o destaque principal
+                    const latest = data.contents[0];
+                    document.getElementById('main-title').innerText = latest.titulo;
+                    document.getElementById('main-content').innerText = latest.conteudo;
+
+                    // O resto dos itens formam os módulos
+                    const grid = document.getElementById('modules-grid');
+                    grid.innerHTML = '';
+                    
+                    data.contents.forEach((item, index) => {
+                        grid.innerHTML += `
+                            <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-6 hover:border-slate-700 transition">
+                                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Módulo 0${index + 1}</span>
+                                <h4 class="text-lg font-bold mt-2 mb-2 text-white">${item.titulo}</h4>
+                                <p class="text-slate-400 text-sm line-clamp-3">${item.conteudo}</p>
+                                <div class="mt-4 text-xs text-slate-500">Gerado às ${item.hora || 'Agora'}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) {
+                console.error("Erro ao carregar dados do portal:", e);
+            }
+        }
+        loadPortalData();
+        setInterval(loadPortalData, 30000); // Atualiza sozinho a cada 30 segundos
+    </script>
+</body>
+</html>
